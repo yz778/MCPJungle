@@ -16,9 +16,13 @@ The API is now on `http://localhost:8080`.
 ### CLI usage
 
 ```bash
-mcpj register --name weather --url https://weather.example.com --type rest_api --description "Weather API" --tag utility
-mcpj tools
-mcpj invoke weather --input '{"city":"Amsterdam"}'
+# Start server
+mcp serve --port 8080
+
+# Client ops
+mcp register --name weather --url https://weather.example.com --type rest_api
+mcp tools
+mcp invoke weather --input '{"city":"Amsterdam"}'
 ```
 
 ---
@@ -27,13 +31,4 @@ mcpj invoke weather --input '{"city":"Amsterdam"}'
 
 ```bash
 export DATABASE_URL="postgres://mcp:mcp@localhost:5432/mcp?sslmode=disable"
-go run ./cmd/server
 ```
-
-Use `go run ./cmd/mcpj` for CLI during dev.
-
----
-
-## Status
-
-MVP – authentication, RBAC, observability, and caching are out of scope for now.

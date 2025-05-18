@@ -1,11 +1,11 @@
-# 1️. Build stage
-FROM golang:1.24-alpine AS build
+# Build
+FROM golang:1.22-alpine AS build
 WORKDIR /src
 COPY . .
-RUN apk add --no-cache git && go mod download && CGO_ENABLED=0 go build -o /mcp-registry ./cmd/server
+RUN apk add --no-cache git && go mod download && CGO_ENABLED=0 go build -o /mcp ./cmd/mcp
 
-# Runtime stage
+# Runtime
 FROM gcr.io/distroless/static
-COPY --from=build /mcp-registry /mcp-registry
+COPY --from=build /mcp /mcp
 EXPOSE 8080
-ENTRYPOINT ["/mcp-registry"]
+ENTRYPOINT ["/mcp", "serve"]

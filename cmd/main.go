@@ -7,23 +7,45 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"os/exec"
 
+	"github.com/duaraghav8/mcpjungle/internal/server"
 	"github.com/spf13/cobra"
 )
 
-var baseURL string
+var (
+	baseURL string
+	port    string
+)
 
 func main() {
-	root := &cobra.Command{Use: "mcpj"}
-	root.PersistentFlags().StringVar(&baseURL, "registry", "http://localhost:8080", "registry base URL")
+	root := &cobra.Command{Use: "mcp"}
 
-	root.AddCommand(cmdServe())
-	root.AddCommand(cmdRegister())
-	root.AddCommand(cmdTools())
-	root.AddCommand(cmdRemove())
-	root.AddCommand(cmdInvoke())
-	root.AddCommand(cmdTest())
+	// Global flags
+	root.PersistentFlags().StringVar(&baseURL, "registry", "http://localhost:8080", "registry base URL (for client cmds)")
+
+	// --- Serve sub‑command
+	srv := &cobra.Command{
+		Use:   "serve",
+		Short: "Start the registry server",
+		Run: func(cmd *cobra.Command, args []string) {
+			server.Start(port)
+		},
+	}
+	srv.Flags().StringVar(&port, "port", "8080", "port to bind (overrides $PORT)")
+
+	// --- Client sub‑commands
+	srvClient := []*cobra.Command{
+		cmdRegister(),
+		cmdTools(),
+		cmdRemove(),
+		cmdInvoke(),
+		cmdTest(),
+	}
+
+	root.AddCommand(srv)
+	for _, c := range srvClient {
+		root.AddCommand(c)
+	}
 
 	if err := root.Execute(); err != nil {
 		fmt.Println(err)
@@ -31,31 +53,16 @@ func main() {
 	}
 }
 
-func cmdServe() *cobra.Command {
-	return &cobra.Command{
-		Use:   "serve",
-		Short: "Start the registry server (wrapper around the same binary)",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			// re‑exec server main
-			return exec.Command(os.Args[0], "server").Run()
-		},
-	}
-}
+// ------- client commands (unchanged except naming) -------
 
 func cmdRegister() *cobra.Command {
 	var name, url, desc, ttype string
 	var tags []string
 	c := &cobra.Command{
 		Use:   "register",
-		Short: "Register a tool",
+		Short: "Register a tool in the registry",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			payload := map[string]any{
-				"name":        name,
-				"url":         url,
-				"type":        ttype,
-				"description": desc,
-				"tags":        tags,
-			}
+			payload := map[string]any{"name": name, "url": url, "type": ttype, "description": desc, "tags": tags}
 			body, _ := json.Marshal(payload)
 			resp, err := http.Post(baseURL+"/tools", "application/json", bytes.NewReader(body))
 			if err != nil {
@@ -79,7 +86,7 @@ func cmdRegister() *cobra.Command {
 func cmdTools() *cobra.Command {
 	return &cobra.Command{
 		Use:   "tools",
-		Short: "List tools",
+		Short: "List registered tools",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			resp, err := http.Get(baseURL + "/tools")
 			if err != nil {
@@ -95,7 +102,7 @@ func cmdTools() *cobra.Command {
 func cmdRemove() *cobra.Command {
 	return &cobra.Command{
 		Use:   "remove <name>",
-		Short: "Delete a tool",
+		Short: "Delete a tool by name",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			req, _ := http.NewRequest(http.MethodDelete, baseURL+"/tools/"+args[0], nil)
@@ -104,7 +111,7 @@ func cmdRemove() *cobra.Command {
 				return err
 			}
 			defer resp.Body.Close()
-			if resp.StatusCode != 204 {
+			if resp.StatusCode != http.StatusNoContent {
 				io.Copy(os.Stdout, resp.Body)
 			}
 			return nil
@@ -128,17 +135,17 @@ func cmdInvoke() *cobra.Command {
 			return nil
 		},
 	}
-	c.Flags().StringVar(&input, "input", "{}", "JSON payload to send")
+	c.Flags().StringVar(&input, "input", "{}", "JSON payload")
 	return c
 }
 
 func cmdTest() *cobra.Command {
-	var testURL string
+	var url string
 	c := &cobra.Command{
 		Use:   "test",
-		Short: "Test MCP compliance by fetching /.well-known/mcp",
+		Short: "Fetch /.well-known/mcp and print result",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := http.Get(testURL + "/.well-known/mcp")
+			resp, err := http.Get(url + "/.well-known/mcp")
 			if err != nil {
 				return err
 			}
@@ -150,7 +157,7 @@ func cmdTest() *cobra.Command {
 			return nil
 		},
 	}
-	c.Flags().StringVar(&testURL, "url", "", "tool URL to test")
+	c.Flags().StringVar(&url, "url", "", "tool URL to test")
 	_ = c.MarkFlagRequired("url")
 	return c
 }
