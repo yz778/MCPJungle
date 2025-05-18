@@ -18,14 +18,18 @@ var (
 )
 
 func main() {
-	root := &cobra.Command{Use: "mcp"}
+	root := &cobra.Command{Use: "mcpjungle", Short: "MCP Tool catalogue"}
 
 	// Global flags
-	root.PersistentFlags().StringVar(&baseURL, "registry", "http://localhost:8080", "registry base URL (for client cmds)")
+	root.PersistentFlags().StringVar(
+		&baseURL,
+		"registry",
+		"http://127.0.0.1:8080",
+		"registry server base URL",
+	)
 
-	// --- Serve sub‑command
 	srv := &cobra.Command{
-		Use:   "serve",
+		Use:   "server",
 		Short: "Start the registry server",
 		Run: func(cmd *cobra.Command, args []string) {
 			server.Start(port)
@@ -33,7 +37,6 @@ func main() {
 	}
 	srv.Flags().StringVar(&port, "port", "8080", "port to bind (overrides $PORT)")
 
-	// --- Client sub‑commands
 	srvClient := []*cobra.Command{
 		cmdRegister(),
 		cmdTools(),
@@ -52,8 +55,6 @@ func main() {
 		os.Exit(1)
 	}
 }
-
-// ------- client commands (unchanged except naming) -------
 
 func cmdRegister() *cobra.Command {
 	var name, url, desc, ttype string
@@ -126,7 +127,7 @@ func cmdInvoke() *cobra.Command {
 		Short: "Invoke a tool with JSON input",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := http.Post(baseURL+"/invoke/"+args[0], "application/json", bytes.NewReader([]byte(input)))
+			resp, err := http.Post(baseURL, "application/json", bytes.NewReader([]byte(input)))
 			if err != nil {
 				return err
 			}
