@@ -127,7 +127,7 @@ func cmdInvoke() *cobra.Command {
 		Short: "Invoke a tool with JSON input",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			resp, err := http.Post(baseURL, "application/json", bytes.NewReader([]byte(input)))
+			resp, err := http.Post(baseURL+"/invoke/"+args[0], "application/json", bytes.NewReader([]byte(input)))
 			if err != nil {
 				return err
 			}
