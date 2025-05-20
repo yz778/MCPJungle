@@ -17,10 +17,15 @@ func Start(port string) {
 
 	r := gin.Default()
 	r.GET("/healthcheck", func(c *gin.Context) { c.JSON(200, gin.H{"status": "ok"}) })
-	r.POST("/tools", api.RegisterToolHandler)
-	r.GET("/tools", api.ListToolsHandler)
-	r.DELETE("/tools/:name", api.DeleteToolHandler)
-	r.POST("/invoke/:name", api.Invoke)
+
+	apiV0 := r.Group("/api/v0")
+	{
+		apiV0.POST("/servers", api.RegisterServerHandler)
+		apiV0.DELETE("/servers/:name", api.DeregisterServerHandler)
+		apiV0.GET("/servers", api.ListServersHandler)
+		apiV0.GET("/tools", api.ListToolsHandler)
+		apiV0.POST("/tools/:name/invoke", api.InvokeToolHandler)
+	}
 
 	if port == "" {
 		port = os.Getenv("PORT")
