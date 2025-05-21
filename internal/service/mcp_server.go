@@ -67,7 +67,7 @@ func DeregisterMcpServer(name string) error {
 			err,
 		)
 	}
-	if err := db.DB.Delete(s); err != nil {
+	if err := db.DB.Delete(s).Error; err != nil {
 		return fmt.Errorf("failed to deregister server %s: %w", name, err)
 	}
 	return nil
