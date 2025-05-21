@@ -21,6 +21,10 @@ func ListTools() ([]models.Tool, error) {
 
 // ListToolsByServer fetches tools from the specified MCP server
 func ListToolsByServer(name string) ([]models.Tool, error) {
+	if err := validateServerName(name); err != nil {
+		return nil, err
+	}
+
 	s, err := GetMcpServer(name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get MCP server %s from DB: %w", name, err)

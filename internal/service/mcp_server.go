@@ -6,22 +6,14 @@ import (
 	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/models"
 	"github.com/mark3labs/mcp-go/mcp"
-	"regexp"
 )
-
-// Only allow letters, numbers, hyphens, and underscores
-var validServerName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 // RegisterMcpServer registers a new MCP server in the database.
 // It also registers all the Tools provided by the server.
 // Tool registration is on best-effort basis and does not fail the server registration.
 func RegisterMcpServer(ctx context.Context, s *models.McpServer) error {
-	// Server name must not contain slashes '/'
-	// Tools in mcpjungle are identified by `<server_name>/<tool_name>` (eg- `github/git_commit`)
-	// When a tool is invoked, the text before the first slash is treated as the server name.
-	// eg- In `aws/ec2/create_sg`, `aws` is the MCP server's name and `ec2/create_sg` is the tool.
-	if !validServerName.MatchString(s.Name) {
-		return fmt.Errorf("invalid server name: '%s' must not contain slashes or special characters", s.Name)
+	if err := validateServerName(s.Name); err != nil {
+		return err
 	}
 
 	// test that the server is reachable and is MCP-compliant

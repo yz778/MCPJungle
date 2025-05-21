@@ -5,10 +5,26 @@ import (
 	"fmt"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
+	"regexp"
 	"strings"
 )
 
 const serverToolNameSep = "/"
+
+// Only allow letters, numbers, hyphens, and underscores
+var validServerName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
+
+// validServerName checks if the server name is valid.
+// Server name must not contain slashes '/'
+// Tools in mcpjungle are identified by `<server_name>/<tool_name>` (eg- `github/git_commit`)
+// When a tool is invoked, the text before the first slash is treated as the server name.
+// eg- In `aws/ec2/create_sg`, `aws` is the MCP server's name and `ec2/create_sg` is the tool.
+func validateServerName(name string) error {
+	if !validServerName.MatchString(name) {
+		return fmt.Errorf("invalid server name: '%s' must not contain slashes or special characters", name)
+	}
+	return nil
+}
 
 // mergeServerToolNames combines the server name and tool name into a single tool name unique across the registry.
 func mergeServerToolNames(s, t string) string {
