@@ -10,6 +10,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const ApiV0PathPrefix = "/api/v0"
+
 // Start spins up the registry HTTP server (blocking call).
 func Start(port string) {
 	_ = godotenv.Load()
@@ -18,13 +20,13 @@ func Start(port string) {
 	r := gin.Default()
 	r.GET("/healthcheck", func(c *gin.Context) { c.JSON(200, gin.H{"status": "ok"}) })
 
-	apiV0 := r.Group("/api/v0")
+	apiV0 := r.Group(ApiV0PathPrefix)
 	{
 		apiV0.POST("/servers", api.RegisterServerHandler)
 		apiV0.DELETE("/servers/:name", api.DeregisterServerHandler)
 		apiV0.GET("/servers", api.ListServersHandler)
 		apiV0.GET("/tools", api.ListToolsHandler)
-		apiV0.POST("/tools/:name/invoke", api.InvokeToolHandler)
+		apiV0.POST("/tools/invoke", api.InvokeToolHandler)
 	}
 
 	if port == "" {

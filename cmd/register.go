@@ -55,11 +55,14 @@ func runRegisterMCPServer(cmd *cobra.Command, args []string) error {
 		"name": registerCmdServerName, "url": registerCmdServerURL, "description": registerCmdServerDesc,
 	}
 	body, _ := json.Marshal(payload)
-	resp, err := http.Post(registryServerURL+"/servers", "application/json", bytes.NewReader(body))
+	url := constructURL("/servers")
+
+	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+
 	io.Copy(os.Stdout, resp.Body)
 	return nil
 }

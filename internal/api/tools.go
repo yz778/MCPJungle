@@ -31,16 +31,23 @@ func ListToolsHandler(c *gin.Context) {
 
 // InvokeToolHandler forwards the JSON body to the tool URL and streams response back.
 func InvokeToolHandler(c *gin.Context) {
-	name := c.Param("name")
-
 	var args map[string]any
 	if err := json.NewDecoder(c.Request.Body).Decode(&args); err != nil {
 		c.JSON(
 			http.StatusBadRequest,
-			gin.H{
-				"error": "failed to decode request body: " + err.Error(),
-			},
+			gin.H{"error": "failed to decode request body: " + err.Error()},
 		)
+		return
+	}
+
+	rawName, ok := args["name"]
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing 'name' field in request body"})
+		return
+	}
+	name, ok := rawName.(string)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "'name' field must be a string"})
 		return
 	}
 

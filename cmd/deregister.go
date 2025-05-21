@@ -20,12 +20,15 @@ func init() {
 }
 
 func runDeregisterMCPServer(cmd *cobra.Command, args []string) error {
-	req, _ := http.NewRequest(http.MethodDelete, registryServerURL+"/servers/"+args[0], nil)
+	url := constructURL("/servers/" + args[0])
+	req, _ := http.NewRequest(http.MethodDelete, url, nil)
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+
 	if resp.StatusCode != http.StatusNoContent {
 		io.Copy(os.Stdout, resp.Body)
 	}

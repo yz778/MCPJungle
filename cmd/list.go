@@ -41,21 +41,24 @@ func init() {
 }
 
 func runListTools(cmd *cobra.Command, args []string) error {
-	url := registryServerURL + "/tools"
+	// TODO: Move the logic of adding query params inside constructURL()
+	url := constructURL("/tools")
 	if listToolsCmdServerName != "" {
 		url += "?server=" + listToolsCmdServerName
 	}
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+
 	io.Copy(os.Stdout, resp.Body)
 	return nil
 }
 
 func runListServers(cmd *cobra.Command, args []string) error {
-	resp, err := http.Get(registryServerURL + "/servers")
+	resp, err := http.Get(constructURL("/servers"))
 	if err != nil {
 		return err
 	}

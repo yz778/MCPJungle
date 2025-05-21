@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/spf13/cobra"
 	"io"
 	"net/http"
@@ -24,15 +26,21 @@ func init() {
 }
 
 func runInvokeTool(cmd *cobra.Command, args []string) error {
-	resp, err := http.Post(
-		registryServerURL+"/invoke/"+args[0],
-		"application/json",
-		bytes.NewReader([]byte(invokeCmdInput)),
-	)
+	// add tool name to the payload
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(invokeCmdInput), &payload); err != nil {
+		return fmt.Errorf("invalid JSON payload: %w", err)
+	}
+	payload["name"] = args[0]
+
+	body, _ := json.Marshal(payload)
+	u := constructURL("/tools/invoke")
+	resp, err := http.Post(u, "application/json", bytes.NewReader(body))
 	if err != nil {
-		return err
+		return fmt.Errorf("request to server failed: %w", err)
 	}
 	defer resp.Body.Close()
+
 	io.Copy(os.Stdout, resp.Body)
 	return nil
 }
