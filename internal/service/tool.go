@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
-	"strings"
 
 	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/models"
@@ -22,7 +20,18 @@ func ListTools() ([]models.Tool, error) {
 }
 
 // ListToolsByServer fetches tools from the specified MCP server
-func ListToolsByServer(server string) ([]models.Tool, error) {}
+func ListToolsByServer(name string) ([]models.Tool, error) {
+	s, err := GetMcpServer(name)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get MCP server %s from DB: %w", name, err)
+	}
+
+	var tools []models.Tool
+	if err := db.DB.Where("server_id = ?", s.ID).Find(&tools).Error; err != nil {
+		return nil, fmt.Errorf("failed to get tools for server %s from DB: %w", name, err)
+	}
+	return tools, nil
+}
 
 // InvokeTool invokes a tool from a registered MCP server and returns its response.
 func InvokeTool(ctx context.Context, name string, args map[string]any) (string, error) {
