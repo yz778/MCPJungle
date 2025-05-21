@@ -6,7 +6,6 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
-	github.com/lib/pq v1.10.9
 	github.com/mark3labs/mcp-go v0.28.0
 	github.com/spf13/cobra v1.9.1
 	gorm.io/datatypes v1.2.5
