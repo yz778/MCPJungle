@@ -27,7 +27,7 @@ func init() {
 		&registerCmdServerName,
 		"name",
 		"",
-		"MCP server name. If not supplied, name is read from Server metadata",
+		"MCP server name",
 	)
 	registerMCPServerCmd.Flags().StringVar(
 		&registerCmdServerURL,
@@ -42,6 +42,9 @@ func init() {
 		"Server description",
 	)
 
+	// TODO: name should not be mandatory.
+	//  If not supplied, name should be read from MCP server metadata by the registry.
+	_ = registerMCPServerCmd.MarkFlagRequired("name")
 	_ = registerMCPServerCmd.MarkFlagRequired("url")
 
 	rootCmd.AddCommand(registerMCPServerCmd)

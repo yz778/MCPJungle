@@ -13,7 +13,7 @@ func RegisterServerHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := service.RegisterMcpServer(&req); err != nil {
+	if err := service.RegisterMcpServer(c, &req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
