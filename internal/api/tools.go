@@ -59,3 +59,22 @@ func InvokeToolHandler(c *gin.Context) {
 
 	c.JSON(http.StatusOK, resp)
 }
+
+// GetToolHandler returns the tool with the given name.
+func GetToolHandler(c *gin.Context) {
+	// tool name has to be supplied as a query param because it contains slash.
+	// cannot be supplied as a path param.
+	name := c.Query("name")
+	if name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "missing 'name' query parameter"})
+		return
+	}
+
+	tool, err := service.GetTool(name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get tool: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, tool)
+}

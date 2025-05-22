@@ -55,7 +55,7 @@ func runRegisterMCPServer(cmd *cobra.Command, args []string) error {
 		"name": registerCmdServerName, "url": registerCmdServerURL, "description": registerCmdServerDesc,
 	}
 	body, _ := json.Marshal(payload)
-	url := constructURL("/servers")
+	url := constructAPIEndpoint("/servers")
 
 	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
 	if err != nil {

@@ -5,8 +5,7 @@ import (
 	"net/url"
 )
 
-// constructURL constructs the API endpoint for the given suffix path
-func constructURL(suffixPath string) string {
+func constructAPIEndpoint(suffixPath string) string {
 	u, _ := url.JoinPath(registryServerURL, server.ApiV0PathPrefix, suffixPath)
 	return u
 }

@@ -37,6 +37,24 @@ func ListToolsByServer(name string) ([]models.Tool, error) {
 	return tools, nil
 }
 
+func GetTool(name string) (*models.Tool, error) {
+	serverName, toolName, ok := splitServerToolName(name)
+	if !ok {
+		return nil, fmt.Errorf("invalid input: tool name does not contain a %s separator", serverToolNameSep)
+	}
+
+	s, err := GetMcpServer(serverName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get MCP server %s from DB: %w", serverName, err)
+	}
+
+	var tool models.Tool
+	if err := db.DB.Where("server_id = ? AND name = ?", s.ID, toolName).First(&tool).Error; err != nil {
+		return nil, fmt.Errorf("failed to get tool %s from DB: %w", name, err)
+	}
+	return &tool, nil
+}
+
 // InvokeTool invokes a tool from a registered MCP server and returns its response.
 func InvokeTool(ctx context.Context, name string, args map[string]any) (string, error) {
 	serverName, toolName, ok := splitServerToolName(name)

@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"io"
 	"net/http"
@@ -41,15 +42,18 @@ func init() {
 }
 
 func runListTools(cmd *cobra.Command, args []string) error {
-	// TODO: Move the logic of adding query params inside constructURL()
-	url := constructURL("/tools")
+	req, _ := http.NewRequest(http.MethodGet, constructAPIEndpoint("/tools"), nil)
+
+	// if server name is provided, add it to the query parameters
 	if listToolsCmdServerName != "" {
-		url += "?server=" + listToolsCmdServerName
+		q := req.URL.Query()
+		q.Add("server", listToolsCmdServerName)
+		req.URL.RawQuery = q.Encode()
 	}
 
-	resp, err := http.Get(url)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list tools: %w", err)
 	}
 	defer resp.Body.Close()
 
@@ -58,7 +62,7 @@ func runListTools(cmd *cobra.Command, args []string) error {
 }
 
 func runListServers(cmd *cobra.Command, args []string) error {
-	resp, err := http.Get(constructURL("/servers"))
+	resp, err := http.Get(constructAPIEndpoint("/servers"))
 	if err != nil {
 		return err
 	}

@@ -27,6 +27,7 @@ func Start(port string) {
 		apiV0.GET("/servers", api.ListServersHandler)
 		apiV0.GET("/tools", api.ListToolsHandler)
 		apiV0.POST("/tools/invoke", api.InvokeToolHandler)
+		apiV0.GET("/tool", api.GetToolHandler)
 	}
 
 	if port == "" {

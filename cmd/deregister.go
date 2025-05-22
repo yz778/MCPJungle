@@ -20,7 +20,7 @@ func init() {
 }
 
 func runDeregisterMCPServer(cmd *cobra.Command, args []string) error {
-	url := constructURL("/servers/" + args[0])
+	url := constructAPIEndpoint("/servers/" + args[0])
 	req, _ := http.NewRequest(http.MethodDelete, url, nil)
 
 	resp, err := http.DefaultClient.Do(req)
