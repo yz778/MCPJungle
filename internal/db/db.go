@@ -2,9 +2,6 @@ package db
 
 import (
 	"log"
-	"os"
-
-	"github.com/duaraghav8/mcpjungle/internal/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/driver/sqlite"
@@ -13,9 +10,8 @@ import (
 
 var DB *gorm.DB
 
-// Init initialises the global DB connection using DATABASE_URL env var. Falls back to sqlite if missing.
-func Init() {
-	dsn := os.Getenv("DATABASE_URL")
+// Init initialises the global DB connection.
+func Init(dsn string) {
 	var dialector gorm.Dialector
 	if dsn == "" {
 		log.Println("[db] DATABASE_URL not set – falling back to embedded SQLite ./mcp.db")
@@ -28,10 +24,5 @@ func Init() {
 	DB, err = gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
-	}
-
-	// Auto‑migrate models
-	if err := DB.AutoMigrate(&models.Tool{}); err != nil {
-		log.Fatalf("auto‑migration failed: %v", err)
 	}
 }
