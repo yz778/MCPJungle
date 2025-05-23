@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/models"
-	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // RegisterMcpServer registers a new MCP server in the database.
@@ -28,27 +27,9 @@ func RegisterMcpServer(ctx context.Context, s *models.McpServer) error {
 		return fmt.Errorf("failed to register mcp server: %w", err)
 	}
 
-	// fetch all tools from the server so they can be added to the DB
-	resp, err := c.ListTools(ctx, mcp.ListToolsRequest{})
-	if err != nil {
-		return fmt.Errorf("failed to fetch tools from MCP server %s: %w", s.Name, err)
+	if err = registerServerTools(ctx, s, c); err != nil {
+		return fmt.Errorf("failed to register tools for MCP server %s: %w", s.Name, err)
 	}
-	for _, tool := range resp.Tools {
-		t := &models.Tool{
-			ServerID:    s.ID,
-			Name:        tool.GetName(),
-			Description: tool.Description,
-			// TODO: Also add the tool's input schema, annotation, etc
-		}
-		if err := registerTool(t); err != nil {
-			// TODO: Add error log about this failure
-			// If registration of a tool fails, we should not fail the entire server registration.
-			// Instead, continue with the next tool.
-
-			//return fmt.Errorf("failed to register tool %s in DB: %w", mergeServerToolNames(s.Name, t.Name), err)
-		}
-	}
-
 	return nil
 }
 
@@ -60,7 +41,7 @@ func DeregisterMcpServer(name string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get MCP server %s from DB: %w", name, err)
 	}
-	if err := deregisterToolsByServer(s); err != nil {
+	if err := deregisterServerTools(s); err != nil {
 		return fmt.Errorf(
 			"failed to deregister tools for server %s, cannot proceed with server deregistration: %w",
 			name,

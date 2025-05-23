@@ -69,7 +69,6 @@ func GetToolHandler(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing 'name' query parameter"})
 		return
 	}
-
 	tool, err := service.GetTool(name)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get tool: " + err.Error()})

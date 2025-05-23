@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
 
 	"github.com/duaraghav8/mcpjungle/internal/db"
@@ -100,12 +101,33 @@ func InvokeTool(ctx context.Context, name string, args map[string]any) (string, 
 	return textContent.Text, nil
 }
 
-// registerTool registers a tool in the database.
-func registerTool(t *models.Tool) error {
-	return db.DB.Create(t).Error
+// registerServerTools fetches all tools from an MCP server and registers them in the DB.
+func registerServerTools(ctx context.Context, s *models.McpServer, c *client.Client) error {
+	// fetch all tools from the server so they can be added to the DB
+	resp, err := c.ListTools(ctx, mcp.ListToolsRequest{})
+	if err != nil {
+		return fmt.Errorf("failed to fetch tools from MCP server %s: %w", s.Name, err)
+	}
+	for _, tool := range resp.Tools {
+		t := &models.Tool{
+			ServerID:    s.ID,
+			Name:        tool.GetName(),
+			Description: tool.Description,
+			// TODO: Also add the tool's input schema, annotation, etc
+		}
+		if err := db.DB.Create(t).Error; err != nil {
+			// TODO: Add error log about this failure
+			// If registration of a tool fails, we should not fail the entire server registration.
+			// Instead, continue with the next tool.
+
+			//return fmt.Errorf("failed to register tool %s in DB: %w", mergeServerToolNames(s.Name, t.Name), err)
+		}
+	}
+	return nil
 }
 
-func deregisterToolsByServer(s *models.McpServer) error {
+// deregisterServerTools deletes all tools that belong to an MCP server from the DB.
+func deregisterServerTools(s *models.McpServer) error {
 	if err := db.DB.Where("server_id = ?", s.ID).Delete(&models.Tool{}).Error; err != nil {
 		return fmt.Errorf("failed to delete tools for server %s: %w", s.Name, err)
 	}
