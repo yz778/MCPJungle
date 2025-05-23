@@ -1,10 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
-	"io"
 	"net/http"
-	"os"
 )
 
 var deregisterMCPServerCmd = &cobra.Command{
@@ -30,7 +29,7 @@ func runDeregisterMCPServer(cmd *cobra.Command, args []string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
-		io.Copy(os.Stdout, resp.Body)
+		return fmt.Errorf("server responded with unexpected status %s: %s", resp.Status, resp.Body)
 	}
 	return nil
 }
