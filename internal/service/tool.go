@@ -11,16 +11,24 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
-// ListTools returns all tools or filtered by name / tags.
+// ListTools returns all tools registered in the registry.
 func ListTools() ([]models.Tool, error) {
 	var tools []models.Tool
 	if err := db.DB.Find(&tools).Error; err != nil {
 		return nil, err
 	}
+	// prepend server name to tool names to ensure we only return the unique names of tools to user
+	for i := range tools {
+		var s models.McpServer
+		if err := db.DB.First(&s, "id = ?", tools[i].ServerID).Error; err != nil {
+			return nil, fmt.Errorf("failed to get server for tool %s: %w", tools[i].Name, err)
+		}
+		tools[i].Name = s.Name + serverToolNameSep + tools[i].Name
+	}
 	return tools, nil
 }
 
-// ListToolsByServer fetches tools from the specified MCP server
+// ListToolsByServer fetches tools provided by an MCP server from the registry.
 func ListToolsByServer(name string) ([]models.Tool, error) {
 	if err := validateServerName(name); err != nil {
 		return nil, err
@@ -35,6 +43,12 @@ func ListToolsByServer(name string) ([]models.Tool, error) {
 	if err := db.DB.Where("server_id = ?", s.ID).Find(&tools).Error; err != nil {
 		return nil, fmt.Errorf("failed to get tools for server %s from DB: %w", name, err)
 	}
+
+	// prepend server name to tool names to ensure we only return the unique names of tools to user
+	for i := range tools {
+		tools[i].Name = s.Name + serverToolNameSep + tools[i].Name
+	}
+
 	return tools, nil
 }
 
