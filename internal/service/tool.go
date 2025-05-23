@@ -2,13 +2,13 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/mark3labs/mcp-go/client"
-	"github.com/mark3labs/mcp-go/mcp"
-
 	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/models"
+	"github.com/mark3labs/mcp-go/client"
+	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // ListTools returns all tools or filtered by name / tags.
@@ -109,11 +109,15 @@ func registerServerTools(ctx context.Context, s *models.McpServer, c *client.Cli
 		return fmt.Errorf("failed to fetch tools from MCP server %s: %w", s.Name, err)
 	}
 	for _, tool := range resp.Tools {
+		// extracting json schema is currently on best-effort basis
+		// if it fails, we log the error and continue with the next tool
+		jsonSchema, _ := json.Marshal(tool.InputSchema)
+
 		t := &models.Tool{
 			ServerID:    s.ID,
 			Name:        tool.GetName(),
 			Description: tool.Description,
-			// TODO: Also add the tool's input schema, annotation, etc
+			InputSchema: jsonSchema,
 		}
 		if err := db.DB.Create(t).Error; err != nil {
 			// TODO: Add error log about this failure
