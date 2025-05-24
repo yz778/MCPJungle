@@ -1,12 +1,8 @@
 package cmd
 
 import (
-	"bytes"
-	"encoding/json"
+	"fmt"
 	"github.com/spf13/cobra"
-	"io"
-	"net/http"
-	"os"
 )
 
 var (
@@ -51,18 +47,10 @@ func init() {
 }
 
 func runRegisterMCPServer(cmd *cobra.Command, args []string) error {
-	payload := map[string]any{
-		"name": registerCmdServerName, "url": registerCmdServerURL, "description": registerCmdServerDesc,
-	}
-	body, _ := json.Marshal(payload)
-	url := constructAPIEndpoint("/servers")
-
-	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
+	s, err := apiClient.RegisterServer(registerCmdServerName, registerCmdServerURL, registerCmdServerDesc)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to register server: %w", err)
 	}
-	defer resp.Body.Close()
-
-	io.Copy(os.Stdout, resp.Body)
+	fmt.Printf("Server %s registered successfully!\n", s.Name)
 	return nil
 }

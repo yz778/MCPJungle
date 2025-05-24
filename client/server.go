@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +13,38 @@ type Server struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	URL         string `json:"url"`
+}
+
+// RegisterServer registers a new MCP server with the registry.
+func (c *Client) RegisterServer(name, url, description string) (*Server, error) {
+	u, _ := c.constructAPIEndpoint("/servers")
+	server := &Server{
+		Name:        name,
+		Description: description,
+		URL:         url,
+	}
+
+	body, err := json.Marshal(server)
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize server data into JSON: %w", err)
+	}
+
+	resp, err := c.HTTPClient.Post(u, "application/json", bytes.NewBuffer(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request to %s: %w", u, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed with status: %d, message: %s", resp.StatusCode, body)
+	}
+
+	var registeredServer Server
+	if err := json.NewDecoder(resp.Body).Decode(&registeredServer); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+	return &registeredServer, nil
 }
 
 // ListServers fetches the list of registered servers.
