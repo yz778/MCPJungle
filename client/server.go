@@ -1,16 +1,38 @@
 package client
 
-import "io"
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+)
+
+// Server represents an MCP server registered in the MCPJungle registry.
+type Server struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
+}
 
 // ListServers fetches the list of registered servers.
-func (c *Client) ListServers() ([]byte, error) {
+func (c *Client) ListServers() ([]*Server, error) {
 	u, _ := c.constructAPIEndpoint("/servers")
 	resp, err := c.HTTPClient.Get(u)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	return io.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed with status: %d, message: %s", resp.StatusCode, body)
+	}
+
+	var servers []*Server
+	if err := json.NewDecoder(resp.Body).Decode(&servers); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+	return servers, nil
 }
 
 // DeregisterServer deletes a server by name.

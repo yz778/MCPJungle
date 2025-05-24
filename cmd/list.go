@@ -62,11 +62,17 @@ func runListTools(cmd *cobra.Command, args []string) error {
 }
 
 func runListServers(cmd *cobra.Command, args []string) error {
-	resp, err := apiClient.ListServers()
+	servers, err := apiClient.ListServers()
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(resp)
+	for _, s := range servers {
+		fmt.Println()
+		fmt.Println(s.Name)
+		fmt.Println(s.URL)
+		fmt.Println(s.Description)
+	}
+
 	return nil
 }
