@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
+	"slices"
 )
 
 var usageCmd = &cobra.Command{
@@ -21,6 +23,30 @@ func runGetToolUsage(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("failed to get tool '%s': %w", args[0], err)
 	}
-	fmt.Println(t.InputSchema)
+
+	fmt.Println(t.Name)
+	fmt.Println(t.Description)
+
+	fmt.Println()
+	fmt.Println("Input Parameters:")
+	for k, v := range t.InputSchema.Properties {
+		requiredOrOptional := "optional"
+		if slices.Contains(t.InputSchema.Required, k) {
+			requiredOrOptional = "required"
+		}
+
+		fmt.Printf("- %s (%s)\n", k, requiredOrOptional)
+
+		j, err := json.MarshalIndent(v, "", "  ")
+		if err != nil {
+			// Simply print the raw object if we fail to marshal it
+			fmt.Println(v)
+		} else {
+			fmt.Println(string(j))
+		}
+
+		fmt.Println()
+	}
+
 	return nil
 }

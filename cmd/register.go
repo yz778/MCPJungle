@@ -52,5 +52,17 @@ func runRegisterMCPServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to register server: %w", err)
 	}
 	fmt.Printf("Server %s registered successfully!\n", s.Name)
+
+	tools, err := apiClient.ListTools(s.Name)
+	if err != nil {
+		// if we fail to fetch tool list, fail silently because this is not a must-have output
+		return nil
+	}
+	fmt.Println()
+	fmt.Println("The following tools are now available from this server:")
+	for _, tool := range tools {
+		fmt.Printf("- %s: %s\n", tool.Name, tool.Description)
+	}
+
 	return nil
 }

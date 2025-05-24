@@ -48,10 +48,12 @@ func runListTools(cmd *cobra.Command, args []string) error {
 		fmt.Println("There are no tools in the registry")
 		return nil
 	}
-	for _, t := range tools {
-		fmt.Println()
+	for i, t := range tools {
 		fmt.Println(t.Name)
 		fmt.Println(t.Description)
+		if i < len(tools)-1 {
+			fmt.Println()
+		}
 	}
 
 	return nil
@@ -67,11 +69,13 @@ func runListServers(cmd *cobra.Command, args []string) error {
 		fmt.Println("There are no MCP servers in the registry")
 		return nil
 	}
-	for _, s := range servers {
-		fmt.Println()
+	for i, s := range servers {
 		fmt.Println(s.Name)
 		fmt.Println(s.URL)
 		fmt.Println(s.Description)
+		if i < len(servers)-1 {
+			fmt.Println()
+		}
 	}
 
 	return nil
