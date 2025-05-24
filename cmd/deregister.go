@@ -29,7 +29,7 @@ func runDeregisterMCPServer(cmd *cobra.Command, args []string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("server responded with unexpected status %s: %s", resp.Status, resp.Body)
+		return fmt.Errorf("server responded with unexpected status code %s, body: %s", resp.Status, resp.Body)
 	}
 	return nil
 }

@@ -62,11 +62,11 @@ func runListTools(cmd *cobra.Command, args []string) error {
 }
 
 func runListServers(cmd *cobra.Command, args []string) error {
-	resp, err := http.Get(constructAPIEndpoint("/servers"))
+	resp, err := apiClient.ListServers()
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	io.Copy(os.Stdout, resp.Body)
+
+	fmt.Println(resp)
 	return nil
 }
