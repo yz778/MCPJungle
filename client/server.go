@@ -19,7 +19,7 @@ func (c *Client) ListServers() ([]*Server, error) {
 	u, _ := c.constructAPIEndpoint("/servers")
 	resp, err := c.HTTPClient.Get(u)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to send request to %s: %w", u, err)
 	}
 	defer resp.Body.Close()
 

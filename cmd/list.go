@@ -3,9 +3,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"io"
-	"net/http"
-	"os"
 )
 
 var listCmd = &cobra.Command{
@@ -42,31 +39,35 @@ func init() {
 }
 
 func runListTools(cmd *cobra.Command, args []string) error {
-	req, _ := http.NewRequest(http.MethodGet, constructAPIEndpoint("/tools"), nil)
-
-	// if server name is provided, add it to the query parameters
-	if listToolsCmdServerName != "" {
-		q := req.URL.Query()
-		q.Add("server", listToolsCmdServerName)
-		req.URL.RawQuery = q.Encode()
-	}
-
-	resp, err := http.DefaultClient.Do(req)
+	tools, err := apiClient.ListTools(listToolsCmdServerName)
 	if err != nil {
 		return fmt.Errorf("failed to list tools: %w", err)
 	}
-	defer resp.Body.Close()
 
-	io.Copy(os.Stdout, resp.Body)
+	if len(tools) == 0 {
+		fmt.Println("There are no tools in the registry")
+		return nil
+	}
+	for _, t := range tools {
+		fmt.Println()
+		fmt.Println(t.Name)
+		fmt.Println(t.Description)
+		fmt.Println(t.InputSchema)
+	}
+
 	return nil
 }
 
 func runListServers(cmd *cobra.Command, args []string) error {
 	servers, err := apiClient.ListServers()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to list servers: %w", err)
 	}
 
+	if len(servers) == 0 {
+		fmt.Println("There are no MCP servers in the registry")
+		return nil
+	}
 	for _, s := range servers {
 		fmt.Println()
 		fmt.Println(s.Name)
