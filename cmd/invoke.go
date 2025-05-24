@@ -1,13 +1,9 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/spf13/cobra"
-	"io"
-	"net/http"
-	"os"
 )
 
 var invokeCmdInput string
@@ -21,26 +17,23 @@ var invokeToolCmd = &cobra.Command{
 }
 
 func init() {
-	invokeToolCmd.Flags().StringVar(&invokeCmdInput, "input", "{}", "JSON payload")
+	invokeToolCmd.Flags().StringVar(&invokeCmdInput, "input", "{}", "valid JSON payload")
 	rootCmd.AddCommand(invokeToolCmd)
 }
 
 func runInvokeTool(cmd *cobra.Command, args []string) error {
-	// add tool name to the payload
-	var payload map[string]any
-	if err := json.Unmarshal([]byte(invokeCmdInput), &payload); err != nil {
-		return fmt.Errorf("invalid JSON payload: %w", err)
+	var input map[string]any
+	if err := json.Unmarshal([]byte(invokeCmdInput), &input); err != nil {
+		return fmt.Errorf("invalid input: %w", err)
 	}
-	payload["name"] = args[0]
 
-	body, _ := json.Marshal(payload)
-	u := constructAPIEndpoint("/tools/invoke")
-	resp, err := http.Post(u, "application/json", bytes.NewReader(body))
+	resp, err := apiClient.InvokeTool(args[0], input)
 	if err != nil {
-		return fmt.Errorf("request to server failed: %w", err)
+		return fmt.Errorf("failed to invoke tool: %w", err)
 	}
-	defer resp.Body.Close()
 
-	io.Copy(os.Stdout, resp.Body)
+	fmt.Println("Response from tool:")
+	fmt.Println()
+	fmt.Println(resp)
 	return nil
 }

@@ -98,6 +98,9 @@ func InvokeTool(ctx context.Context, name string, args map[string]any) (string, 
 	callToolReq.Params.Name = toolName
 	callToolReq.Params.Arguments = args
 
+	// CallTool() doesn't return an error if the tool is not found.
+	// Instead, it returns a "not found" message in the response.
+	// TODO: detect this and return an error if the tool is not found.
 	callToolResp, err := mcpClient.CallTool(ctx, callToolReq)
 	if err != nil {
 		return "", fmt.Errorf(

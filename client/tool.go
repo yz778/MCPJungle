@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -46,4 +47,33 @@ func (c *Client) ListTools(server string) ([]*Tool, error) {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 	return tools, nil
+}
+
+// InvokeTool sends a JSON payload to invoke a tool.
+// For now, this function only supports invoking tools that return a string response.
+func (c *Client) InvokeTool(name string, input map[string]any) (string, error) {
+	// We need to insert the tool name into the POST payload
+	// In order not to mutate the user-supplied input, create a shallow copy of the input
+	// and add the name field to it.
+	payload := make(map[string]any, len(input)+1)
+	for k, v := range input {
+		payload[k] = v
+	}
+	payload["name"] = name
+
+	body, _ := json.Marshal(payload)
+	u, _ := c.constructAPIEndpoint("/tools/invoke")
+	resp, err := c.HTTPClient.Post(u, "application/json", bytes.NewReader(body))
+	if err != nil {
+		return "", fmt.Errorf("request to server failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	respBodyStr := string(respBody)
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("request failed with status: %d, message: %s", resp.StatusCode, respBodyStr)
+	}
+	return respBodyStr, nil
 }

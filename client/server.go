@@ -52,14 +52,3 @@ func (c *Client) DeregisterServer(name string) error {
 	}
 	return nil
 }
-
-//// InvokeTool sends a JSON payload to invoke a tool.
-//func (c *Client) InvokeTool(payload map[string]any) ([]byte, error) {
-//	body, _ := json.Marshal(payload)
-//	resp, err := c.HTTPClient.Post(c.BaseURL+"/tools/invoke", "application/json", bytes.NewReader(body))
-//	if err != nil {
-//		return nil, err
-//	}
-//	defer resp.Body.Close()
-//	return io.ReadAll(resp.Body)
-//}
