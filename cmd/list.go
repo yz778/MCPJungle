@@ -52,7 +52,6 @@ func runListTools(cmd *cobra.Command, args []string) error {
 		fmt.Println()
 		fmt.Println(t.Name)
 		fmt.Println(t.Description)
-		fmt.Println(t.InputSchema)
 	}
 
 	return nil

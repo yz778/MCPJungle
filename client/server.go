@@ -36,20 +36,23 @@ func (c *Client) ListServers() ([]*Server, error) {
 }
 
 // DeregisterServer deletes a server by name.
-//func (c *Client) DeregisterServer(name string) error {
-//	req, _ := http.NewRequest(http.MethodDelete, c.BaseURL+"/servers/"+name, nil)
-//	resp, err := c.HTTPClient.Do(req)
-//	if err != nil {
-//		return err
-//	}
-//	defer resp.Body.Close()
-//	if resp.StatusCode != http.StatusNoContent {
-//		body, _ := io.ReadAll(resp.Body)
-//		return fmt.Errorf("unexpected status %s, body: %s", resp.Status, body)
-//	}
-//	return nil
-//}
-//
+func (c *Client) DeregisterServer(name string) error {
+	u, _ := c.constructAPIEndpoint("/servers/" + name)
+	req, _ := http.NewRequest(http.MethodDelete, u, nil)
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request to %s: %w", u, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("unexpected status from server: %s, body: %s", resp.Status, body)
+	}
+	return nil
+}
+
 //// InvokeTool sends a JSON payload to invoke a tool.
 //func (c *Client) InvokeTool(payload map[string]any) ([]byte, error) {
 //	body, _ := json.Marshal(payload)

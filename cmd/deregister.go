@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"net/http"
 )
 
 var deregisterMCPServerCmd = &cobra.Command{
@@ -19,17 +18,10 @@ func init() {
 }
 
 func runDeregisterMCPServer(cmd *cobra.Command, args []string) error {
-	url := constructAPIEndpoint("/servers/" + args[0])
-	req, _ := http.NewRequest(http.MethodDelete, url, nil)
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
+	server := args[0]
+	if err := apiClient.DeregisterServer(server); err != nil {
+		return fmt.Errorf("failed to deregister MCP server %s: %w", server, err)
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("server responded with unexpected status code %s, body: %s", resp.Status, resp.Body)
-	}
+	fmt.Printf("Successfully deregistered MCP server %s\n", server)
 	return nil
 }
