@@ -49,6 +49,32 @@ func (c *Client) ListTools(server string) ([]*Tool, error) {
 	return tools, nil
 }
 
+// GetTool fetches a specific tool by its name.
+func (c *Client) GetTool(name string) (*Tool, error) {
+	u, _ := c.constructAPIEndpoint("/tool")
+	req, _ := http.NewRequest(http.MethodGet, u, nil)
+	q := req.URL.Query()
+	q.Add("name", name)
+	req.URL.RawQuery = q.Encode()
+
+	resp, err := c.HTTPClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to send request to %s: %w", req.URL.String(), err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("request failed with status: %d, message: %s", resp.StatusCode, body)
+	}
+
+	var tool Tool
+	if err := json.NewDecoder(resp.Body).Decode(&tool); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+	return &tool, nil
+}
+
 // InvokeTool sends a JSON payload to invoke a tool.
 // For now, this function only supports invoking tools that return a string response.
 func (c *Client) InvokeTool(name string, input map[string]any) (string, error) {

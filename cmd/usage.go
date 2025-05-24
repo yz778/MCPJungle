@@ -3,9 +3,6 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
-	"io"
-	"net/http"
-	"os"
 )
 
 var usageCmd = &cobra.Command{
@@ -20,21 +17,10 @@ func init() {
 }
 
 func runGetToolUsage(cmd *cobra.Command, args []string) error {
-	req, err := http.NewRequest(http.MethodGet, constructAPIEndpoint("/tool"), nil)
+	t, err := apiClient.GetTool(args[0])
 	if err != nil {
-		return fmt.Errorf("failed to create HTTP request for server: %w", err)
+		return fmt.Errorf("failed to get tool '%s': %w", args[0], err)
 	}
-
-	q := req.URL.Query()
-	q.Add("name", args[0])
-	req.URL.RawQuery = q.Encode()
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("failed to fetch information about tool '%s': %w", args[0], err)
-	}
-	defer resp.Body.Close()
-
-	io.Copy(os.Stdout, resp.Body)
+	fmt.Println(t.InputSchema)
 	return nil
 }
