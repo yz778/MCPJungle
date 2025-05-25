@@ -220,7 +220,11 @@ func WithRecovery() ServerOption {
 		return func(ctx context.Context, request mcp.CallToolRequest) (result *mcp.CallToolResult, err error) {
 			defer func() {
 				if r := recover(); r != nil {
-					err = fmt.Errorf("panic recovered in %s tool handler: %v", request.Params.Name, r)
+					err = fmt.Errorf(
+						"panic recovered in %s tool handler: %v",
+						request.Params.Name,
+						r,
+					)
 				}
 			}()
 			return next(ctx, request)
@@ -399,8 +403,28 @@ func (s *MCPServer) AddPrompt(prompt mcp.Prompt, handler PromptHandlerFunc) {
 	s.promptHandlers[prompt.Name] = handler
 	s.promptsMu.Unlock()
 
-	// When the list of available resources changes, servers that declared the listChanged capability SHOULD send a notification.
+	// When the list of available prompts changes, servers that declared the listChanged capability SHOULD send a notification.
 	if s.capabilities.prompts.listChanged {
+		// Send notification to all initialized sessions
+		s.SendNotificationToAllClients(mcp.MethodNotificationPromptsListChanged, nil)
+	}
+}
+
+// DeletePrompts removes prompts from the server
+func (s *MCPServer) DeletePrompts(names ...string) {
+	s.promptsMu.Lock()
+	var exists bool
+	for _, name := range names {
+		if _, ok := s.prompts[name]; ok {
+			delete(s.prompts, name)
+			delete(s.promptHandlers, name)
+			exists = true
+		}
+	}
+	s.promptsMu.Unlock()
+
+	// Send notification to all initialized sessions if listChanged capability is enabled, and we actually remove a prompt
+	if exists && s.capabilities.prompts != nil && s.capabilities.prompts.listChanged {
 		// Send notification to all initialized sessions
 		s.SendNotificationToAllClients(mcp.MethodNotificationPromptsListChanged, nil)
 	}
@@ -456,7 +480,7 @@ func (s *MCPServer) SetTools(tools ...ServerTool) {
 	s.AddTools(tools...)
 }
 
-// DeleteTools removes a tool from the server
+// DeleteTools removes tools from the server
 func (s *MCPServer) DeleteTools(names ...string) {
 	s.toolsMu.Lock()
 	var exists bool
@@ -487,7 +511,7 @@ func (s *MCPServer) AddNotificationHandler(
 
 func (s *MCPServer) handleInitialize(
 	ctx context.Context,
-	id any,
+	_ any,
 	request mcp.InitializeRequest,
 ) (*mcp.InitializeResult, *requestError) {
 	capabilities := mcp.ServerCapabilities{}
@@ -537,14 +561,19 @@ func (s *MCPServer) handleInitialize(
 
 	if session := ClientSessionFromContext(ctx); session != nil {
 		session.Initialize()
+
+		// Store client info if the session supports it
+		if sessionWithClientInfo, ok := session.(SessionWithClientInfo); ok {
+			sessionWithClientInfo.SetClientInfo(request.Params.ClientInfo)
+		}
 	}
 	return &result, nil
 }
 
 func (s *MCPServer) handlePing(
-	ctx context.Context,
-	id any,
-	request mcp.PingRequest,
+	_ context.Context,
+	_ any,
+	_ mcp.PingRequest,
 ) (*mcp.EmptyResult, *requestError) {
 	return &mcp.EmptyResult{}, nil
 }
@@ -586,14 +615,14 @@ func (s *MCPServer) handleSetLevel(
 			err:  fmt.Errorf("invalid logging level '%s'", level),
 		}
 	}
-	
+
 	sessionLogging.SetLogLevel(level)
 
 	return &mcp.EmptyResult{}, nil
 }
 
 func listByPagination[T mcp.Named](
-	ctx context.Context,
+	_ context.Context,
 	s *MCPServer,
 	cursor mcp.Cursor,
 	allElements []T,
@@ -644,7 +673,12 @@ func (s *MCPServer) handleListResources(
 	sort.Slice(resources, func(i, j int) bool {
 		return resources[i].Name < resources[j].Name
 	})
-	resourcesToReturn, nextCursor, err := listByPagination[mcp.Resource](ctx, s, request.Params.Cursor, resources)
+	resourcesToReturn, nextCursor, err := listByPagination(
+		ctx,
+		s,
+		request.Params.Cursor,
+		resources,
+	)
 	if err != nil {
 		return nil, &requestError{
 			id:   id,
@@ -675,7 +709,12 @@ func (s *MCPServer) handleListResourceTemplates(
 	sort.Slice(templates, func(i, j int) bool {
 		return templates[i].Name < templates[j].Name
 	})
-	templatesToReturn, nextCursor, err := listByPagination[mcp.ResourceTemplate](ctx, s, request.Params.Cursor, templates)
+	templatesToReturn, nextCursor, err := listByPagination(
+		ctx,
+		s,
+		request.Params.Cursor,
+		templates,
+	)
 	if err != nil {
 		return nil, &requestError{
 			id:   id,
@@ -747,7 +786,11 @@ func (s *MCPServer) handleReadResource(
 	return nil, &requestError{
 		id:   id,
 		code: mcp.RESOURCE_NOT_FOUND,
-		err:  fmt.Errorf("handler not found for resource URI '%s': %w", request.Params.URI, ErrResourceNotFound),
+		err: fmt.Errorf(
+			"handler not found for resource URI '%s': %w",
+			request.Params.URI,
+			ErrResourceNotFound,
+		),
 	}
 }
 
@@ -772,7 +815,12 @@ func (s *MCPServer) handleListPrompts(
 	sort.Slice(prompts, func(i, j int) bool {
 		return prompts[i].Name < prompts[j].Name
 	})
-	promptsToReturn, nextCursor, err := listByPagination[mcp.Prompt](ctx, s, request.Params.Cursor, prompts)
+	promptsToReturn, nextCursor, err := listByPagination(
+		ctx,
+		s,
+		request.Params.Cursor,
+		prompts,
+	)
 	if err != nil {
 		return nil, &requestError{
 			id:   id,
@@ -885,7 +933,12 @@ func (s *MCPServer) handleListTools(
 	s.toolFiltersMu.RUnlock()
 
 	// Apply pagination
-	toolsToReturn, nextCursor, err := listByPagination[mcp.Tool](ctx, s, request.Params.Cursor, tools)
+	toolsToReturn, nextCursor, err := listByPagination(
+		ctx,
+		s,
+		request.Params.Cursor,
+		tools,
+	)
 	if err != nil {
 		return nil, &requestError{
 			id:   id,
