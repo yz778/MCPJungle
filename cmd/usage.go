@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"slices"
+	"strings"
 )
 
 var usageCmd = &cobra.Command{
@@ -35,7 +36,10 @@ func runGetToolUsage(cmd *cobra.Command, args []string) error {
 			requiredOrOptional = "required"
 		}
 
-		fmt.Printf("- %s (%s)\n", k, requiredOrOptional)
+		boundary := strings.Repeat("=", len(k)+len(requiredOrOptional)+20)
+
+		fmt.Println(boundary)
+		fmt.Printf("%s (%s)\n", k, requiredOrOptional)
 
 		j, err := json.MarshalIndent(v, "", "  ")
 		if err != nil {
@@ -44,6 +48,7 @@ func runGetToolUsage(cmd *cobra.Command, args []string) error {
 		} else {
 			fmt.Println(string(j))
 		}
+		fmt.Println(boundary)
 
 		fmt.Println()
 	}

@@ -49,12 +49,12 @@ func runListTools(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	for i, t := range tools {
-		fmt.Println(t.Name)
+		fmt.Printf("%d. %s\n", i+1, t.Name)
 		fmt.Println(t.Description)
-		if i < len(tools)-1 {
-			fmt.Println()
-		}
+		fmt.Println()
 	}
+
+	fmt.Println("Run 'usage <tool name>' to see a tool's usage or 'invoke <tool name>' to call one")
 
 	return nil
 }
@@ -70,7 +70,7 @@ func runListServers(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 	for i, s := range servers {
-		fmt.Println(s.Name)
+		fmt.Printf("%d. %s\n", i+1, s.Name)
 		fmt.Println(s.URL)
 		fmt.Println(s.Description)
 		if i < len(servers)-1 {
