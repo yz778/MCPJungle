@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/duaraghav8/mcpjungle/internal/server"
+	"github.com/duaraghav8/mcpjungle/internal/api"
 	"net/http"
 	"net/url"
 )
@@ -12,7 +12,7 @@ type Client struct {
 	HTTPClient *http.Client
 }
 
-func New(baseURL string, httpClient *http.Client) *Client {
+func NewClient(baseURL string, httpClient *http.Client) *Client {
 	return &Client{
 		BaseURL:    baseURL,
 		HTTPClient: httpClient,
@@ -21,5 +21,5 @@ func New(baseURL string, httpClient *http.Client) *Client {
 
 // constructAPIEndpoint constructs the full API endpoint URL where a request must be sent
 func (c *Client) constructAPIEndpoint(suffixPath string) (string, error) {
-	return url.JoinPath(c.BaseURL, server.ApiV0PathPrefix, suffixPath)
+	return url.JoinPath(c.BaseURL, api.V0PathPrefix, suffixPath)
 }

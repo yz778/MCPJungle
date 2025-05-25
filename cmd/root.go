@@ -4,10 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/duaraghav8/mcpjungle/client"
-	"github.com/duaraghav8/mcpjungle/internal/server"
 	"github.com/spf13/cobra"
 	"net/http"
-	"net/url"
 )
 
 // SilentErr is a sentinel error used to indicate that the command should not print an error message
@@ -51,15 +49,8 @@ func Execute() error {
 
 	// Initialize the API client with the registry server URL
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		apiClient = client.New(registryServerURL, http.DefaultClient)
+		apiClient = client.NewClient(registryServerURL, http.DefaultClient)
 	}
 
 	return rootCmd.Execute()
-}
-
-// constructAPIEndpoint constructs the full API endpoint URL by joining the registry server URL
-// with the given suffix path.
-func constructAPIEndpoint(suffixPath string) string {
-	u, _ := url.JoinPath(registryServerURL, server.ApiV0PathPrefix, suffixPath)
-	return u
 }

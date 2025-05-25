@@ -2,17 +2,17 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/duaraghav8/mcpjungle/internal/models"
+	"github.com/duaraghav8/mcpjungle/internal/model"
 	"net/http"
 
 	"github.com/duaraghav8/mcpjungle/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
-func ListToolsHandler(c *gin.Context) {
+func listToolsHandler(c *gin.Context) {
 	server := c.Query("server")
 	var (
-		tools []models.Tool
+		tools []model.Tool
 		err   error
 	)
 	if server == "" {
@@ -29,8 +29,8 @@ func ListToolsHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, tools)
 }
 
-// InvokeToolHandler forwards the JSON body to the tool URL and streams response back.
-func InvokeToolHandler(c *gin.Context) {
+// invokeToolHandler forwards the JSON body to the tool URL and streams response back.
+func invokeToolHandler(c *gin.Context) {
 	var args map[string]any
 	if err := json.NewDecoder(c.Request.Body).Decode(&args); err != nil {
 		c.JSON(
@@ -60,8 +60,8 @@ func InvokeToolHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// GetToolHandler returns the tool with the given name.
-func GetToolHandler(c *gin.Context) {
+// getToolHandler returns the tool with the given name.
+func getToolHandler(c *gin.Context) {
 	// tool name has to be supplied as a query param because it contains slash.
 	// cannot be supplied as a path param.
 	name := c.Query("name")

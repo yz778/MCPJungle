@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 	"github.com/duaraghav8/mcpjungle/internal/db"
-	"github.com/duaraghav8/mcpjungle/internal/models"
+	"github.com/duaraghav8/mcpjungle/internal/model"
 )
 
 // RegisterMcpServer registers a new MCP server in the database.
 // It also registers all the Tools provided by the server.
 // Tool registration is on best-effort basis and does not fail the server registration.
-func RegisterMcpServer(ctx context.Context, s *models.McpServer) error {
+func RegisterMcpServer(ctx context.Context, s *model.McpServer) error {
 	if err := validateServerName(s.Name); err != nil {
 		return err
 	}
@@ -55,8 +55,8 @@ func DeregisterMcpServer(name string) error {
 }
 
 // ListMcpServers returns all registered MCP servers.
-func ListMcpServers() ([]models.McpServer, error) {
-	var servers []models.McpServer
+func ListMcpServers() ([]model.McpServer, error) {
+	var servers []model.McpServer
 	if err := db.DB.Find(&servers).Error; err != nil {
 		return nil, err
 	}
@@ -64,8 +64,8 @@ func ListMcpServers() ([]models.McpServer, error) {
 }
 
 // GetMcpServer fetches a server from the database by name.
-func GetMcpServer(name string) (*models.McpServer, error) {
-	var server models.McpServer
+func GetMcpServer(name string) (*model.McpServer, error) {
+	var server model.McpServer
 	if err := db.DB.Where("name = ?", name).First(&server).Error; err != nil {
 		return nil, err
 	}

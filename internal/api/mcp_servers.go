@@ -1,14 +1,14 @@
 package api
 
 import (
-	"github.com/duaraghav8/mcpjungle/internal/models"
+	"github.com/duaraghav8/mcpjungle/internal/model"
 	"github.com/duaraghav8/mcpjungle/internal/service"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
-func RegisterServerHandler(c *gin.Context) {
-	var req models.McpServer
+func registerServerHandler(c *gin.Context) {
+	var req model.McpServer
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
@@ -20,7 +20,7 @@ func RegisterServerHandler(c *gin.Context) {
 	c.JSON(http.StatusCreated, req)
 }
 
-func DeregisterServerHandler(c *gin.Context) {
+func deregisterServerHandler(c *gin.Context) {
 	name := c.Param("name")
 	if err := service.DeregisterMcpServer(name); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -29,7 +29,7 @@ func DeregisterServerHandler(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-func ListServersHandler(c *gin.Context) {
+func listServersHandler(c *gin.Context) {
 	servers, err := service.ListMcpServers()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

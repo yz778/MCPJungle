@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/duaraghav8/mcpjungle/internal/api"
 	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/migrations"
-	"github.com/duaraghav8/mcpjungle/internal/server"
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"log"
@@ -44,7 +44,7 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to run migrations: %v", err)
 	}
 
-	r := server.SetupRouter()
+	s := api.NewServer()
 
 	port := startServerCmdBindPort
 	if port == "" {
@@ -55,7 +55,7 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 	}
 
 	log.Printf("MCPJungle server listening on :%s", port)
-	if err := r.Run(":" + port); err != nil {
+	if err := s.Run(":" + port); err != nil {
 		return fmt.Errorf("failed to run the server: %v", err)
 	}
 

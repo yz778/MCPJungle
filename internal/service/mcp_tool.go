@@ -6,20 +6,20 @@ import (
 	"errors"
 	"fmt"
 	"github.com/duaraghav8/mcpjungle/internal/db"
-	"github.com/duaraghav8/mcpjungle/internal/models"
+	"github.com/duaraghav8/mcpjungle/internal/model"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
 )
 
 // ListTools returns all tools registered in the registry.
-func ListTools() ([]models.Tool, error) {
-	var tools []models.Tool
+func ListTools() ([]model.Tool, error) {
+	var tools []model.Tool
 	if err := db.DB.Find(&tools).Error; err != nil {
 		return nil, err
 	}
 	// prepend server name to tool names to ensure we only return the unique names of tools to user
 	for i := range tools {
-		var s models.McpServer
+		var s model.McpServer
 		if err := db.DB.First(&s, "id = ?", tools[i].ServerID).Error; err != nil {
 			return nil, fmt.Errorf("failed to get server for tool %s: %w", tools[i].Name, err)
 		}
@@ -29,7 +29,7 @@ func ListTools() ([]models.Tool, error) {
 }
 
 // ListToolsByServer fetches tools provided by an MCP server from the registry.
-func ListToolsByServer(name string) ([]models.Tool, error) {
+func ListToolsByServer(name string) ([]model.Tool, error) {
 	if err := validateServerName(name); err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func ListToolsByServer(name string) ([]models.Tool, error) {
 		return nil, fmt.Errorf("failed to get MCP server %s from DB: %w", name, err)
 	}
 
-	var tools []models.Tool
+	var tools []model.Tool
 	if err := db.DB.Where("server_id = ?", s.ID).Find(&tools).Error; err != nil {
 		return nil, fmt.Errorf("failed to get tools for server %s from DB: %w", name, err)
 	}
@@ -52,7 +52,7 @@ func ListToolsByServer(name string) ([]models.Tool, error) {
 	return tools, nil
 }
 
-func GetTool(name string) (*models.Tool, error) {
+func GetTool(name string) (*model.Tool, error) {
 	serverName, toolName, ok := splitServerToolName(name)
 	if !ok {
 		return nil, fmt.Errorf("invalid input: tool name does not contain a %s separator", serverToolNameSep)
@@ -63,7 +63,7 @@ func GetTool(name string) (*models.Tool, error) {
 		return nil, fmt.Errorf("failed to get MCP server %s from DB: %w", serverName, err)
 	}
 
-	var tool models.Tool
+	var tool model.Tool
 	if err := db.DB.Where("server_id = ? AND name = ?", s.ID, toolName).First(&tool).Error; err != nil {
 		return nil, fmt.Errorf("failed to get tool %s from DB: %w", name, err)
 	}
@@ -121,7 +121,7 @@ func InvokeTool(ctx context.Context, name string, args map[string]any) (string, 
 }
 
 // registerServerTools fetches all tools from an MCP server and registers them in the DB.
-func registerServerTools(ctx context.Context, s *models.McpServer, c *client.Client) error {
+func registerServerTools(ctx context.Context, s *model.McpServer, c *client.Client) error {
 	// fetch all tools from the server so they can be added to the DB
 	resp, err := c.ListTools(ctx, mcp.ListToolsRequest{})
 	if err != nil {
@@ -132,7 +132,7 @@ func registerServerTools(ctx context.Context, s *models.McpServer, c *client.Cli
 		// if it fails, we log the error and continue with the next tool
 		jsonSchema, _ := json.Marshal(tool.InputSchema)
 
-		t := &models.Tool{
+		t := &model.Tool{
 			ServerID:    s.ID,
 			Name:        tool.GetName(),
 			Description: tool.Description,
@@ -150,8 +150,8 @@ func registerServerTools(ctx context.Context, s *models.McpServer, c *client.Cli
 }
 
 // deregisterServerTools deletes all tools that belong to an MCP server from the DB.
-func deregisterServerTools(s *models.McpServer) error {
-	if err := db.DB.Where("server_id = ?", s.ID).Delete(&models.Tool{}).Error; err != nil {
+func deregisterServerTools(s *model.McpServer) error {
+	if err := db.DB.Where("server_id = ?", s.ID).Delete(&model.Tool{}).Error; err != nil {
 		return fmt.Errorf("failed to delete tools for server %s: %w", s.Name, err)
 	}
 	return nil
