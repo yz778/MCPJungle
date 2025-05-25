@@ -23,7 +23,7 @@ func ListTools() ([]models.Tool, error) {
 		if err := db.DB.First(&s, "id = ?", tools[i].ServerID).Error; err != nil {
 			return nil, fmt.Errorf("failed to get server for tool %s: %w", tools[i].Name, err)
 		}
-		tools[i].Name = s.Name + serverToolNameSep + tools[i].Name
+		tools[i].Name = mergeServerToolNames(s.Name, tools[i].Name)
 	}
 	return tools, nil
 }
@@ -46,7 +46,7 @@ func ListToolsByServer(name string) ([]models.Tool, error) {
 
 	// prepend server name to tool names to ensure we only return the unique names of tools to user
 	for i := range tools {
-		tools[i].Name = s.Name + serverToolNameSep + tools[i].Name
+		tools[i].Name = mergeServerToolNames(s.Name, tools[i].Name)
 	}
 
 	return tools, nil
@@ -67,6 +67,8 @@ func GetTool(name string) (*models.Tool, error) {
 	if err := db.DB.Where("server_id = ? AND name = ?", s.ID, toolName).First(&tool).Error; err != nil {
 		return nil, fmt.Errorf("failed to get tool %s from DB: %w", name, err)
 	}
+	// set the tool name back to the full name including server name
+	tool.Name = name
 	return &tool, nil
 }
 
