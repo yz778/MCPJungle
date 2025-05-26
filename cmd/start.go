@@ -44,7 +44,10 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to run migrations: %v", err)
 	}
 
-	s := api.NewServer()
+	s, err := api.NewServer()
+	if err != nil {
+		return fmt.Errorf("failed to create server: %v", err)
+	}
 
 	port := startServerCmdBindPort
 	if port == "" {
