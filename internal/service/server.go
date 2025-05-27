@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/model"
-	"github.com/mark3labs/mcp-go/server"
 )
 
 // RegisterMcpServer registers a new MCP server in the database.
 // It also registers all the Tools provided by the server.
 // Tool registration is on best-effort basis and does not fail the server registration.
 // Registered tools are also added to the MCP proxy server.
-func RegisterMcpServer(ctx context.Context, s *model.McpServer, mcpProxy *server.MCPServer) error {
+func (m *MCPService) RegisterMcpServer(ctx context.Context, s *model.McpServer) error {
 	if err := validateServerName(s.Name); err != nil {
 		return err
 	}
@@ -29,7 +28,7 @@ func RegisterMcpServer(ctx context.Context, s *model.McpServer, mcpProxy *server
 		return fmt.Errorf("failed to register mcp server: %w", err)
 	}
 
-	if err = registerServerTools(ctx, s, c, mcpProxy); err != nil {
+	if err = m.registerServerTools(ctx, s, c); err != nil {
 		return fmt.Errorf("failed to register tools for MCP server %s: %w", s.Name, err)
 	}
 	return nil
@@ -39,12 +38,12 @@ func RegisterMcpServer(ctx context.Context, s *model.McpServer, mcpProxy *server
 // It also deregisters all the tools registered by the server.
 // If even a singe tool fails to deregister, the server deregistration fails.
 // A deregistered tool is also removed from the MCP proxy server.
-func DeregisterMcpServer(name string, mcpProxy *server.MCPServer) error {
-	s, err := GetMcpServer(name)
+func (m *MCPService) DeregisterMcpServer(name string) error {
+	s, err := m.GetMcpServer(name)
 	if err != nil {
 		return fmt.Errorf("failed to get MCP server %s from DB: %w", name, err)
 	}
-	if err := deregisterServerTools(s, mcpProxy); err != nil {
+	if err := m.deregisterServerTools(s); err != nil {
 		return fmt.Errorf(
 			"failed to deregister tools for server %s, cannot proceed with server deregistration: %w",
 			name,
@@ -58,7 +57,7 @@ func DeregisterMcpServer(name string, mcpProxy *server.MCPServer) error {
 }
 
 // ListMcpServers returns all registered MCP servers.
-func ListMcpServers() ([]model.McpServer, error) {
+func (m *MCPService) ListMcpServers() ([]model.McpServer, error) {
 	var servers []model.McpServer
 	if err := db.DB.Find(&servers).Error; err != nil {
 		return nil, err
@@ -67,10 +66,10 @@ func ListMcpServers() ([]model.McpServer, error) {
 }
 
 // GetMcpServer fetches a server from the database by name.
-func GetMcpServer(name string) (*model.McpServer, error) {
-	var server model.McpServer
-	if err := db.DB.Where("name = ?", name).First(&server).Error; err != nil {
+func (m *MCPService) GetMcpServer(name string) (*model.McpServer, error) {
+	var serverModel model.McpServer
+	if err := db.DB.Where("name = ?", name).First(&serverModel).Error; err != nil {
 		return nil, err
 	}
-	return &server, nil
+	return &serverModel, nil
 }

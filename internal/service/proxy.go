@@ -5,13 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
 )
 
-// InitMCPProxyServer initializes the MCP proxy server.
+// initMCPProxyServer initializes the MCP proxy server.
 // It loads all the registered MCP tools from the database into the proxy server.
-func InitMCPProxyServer(ps *server.MCPServer) error {
-	tools, err := ListTools()
+func (m *MCPService) initMCPProxyServer() error {
+	tools, err := m.ListTools()
 	if err != nil {
 		return fmt.Errorf("failed to list tools from DB: %w", err)
 	}
@@ -30,7 +29,7 @@ func InitMCPProxyServer(ps *server.MCPServer) error {
 
 		// TODO: Add other attributes to the tool, such as annotations
 
-		ps.AddTool(tool, mcpProxyToolCallHandler)
+		m.mcpProxyServer.AddTool(tool, m.mcpProxyToolCallHandler)
 	}
 	return nil
 }
@@ -38,7 +37,7 @@ func InitMCPProxyServer(ps *server.MCPServer) error {
 // mcpProxyToolCallHandler handles tool calls for the MCP proxy server
 // by forwarding the request to the appropriate upstream MCP server and
 // relaying the response back.
-func mcpProxyToolCallHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (m *MCPService) mcpProxyToolCallHandler(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	name := request.Params.Name
 	serverName, toolName, ok := splitServerToolName(name)
 	if !ok {
@@ -46,7 +45,7 @@ func mcpProxyToolCallHandler(ctx context.Context, request mcp.CallToolRequest) (
 	}
 
 	// get the MCP server details from the database
-	server, err := GetMcpServer(serverName)
+	server, err := m.GetMcpServer(serverName)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to get details about MCP server %s from DB: %w", serverName, err,

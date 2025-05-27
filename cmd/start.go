@@ -5,6 +5,7 @@ import (
 	"github.com/duaraghav8/mcpjungle/internal/api"
 	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/migrations"
+	"github.com/duaraghav8/mcpjungle/internal/service"
 	"github.com/joho/godotenv"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/spf13/cobra"
@@ -60,15 +61,20 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		server.WithToolCapabilities(true),
 	)
 
-	// create the API server
-	s, err := api.NewServer(port, mcpProxyServer)
+	mcpService, err := service.NewMCPService(mcpProxyServer)
 	if err != nil {
-		return fmt.Errorf("failed to create server: %w", err)
+		return fmt.Errorf("failed to create MCP service: %v", err)
+	}
+
+	// create the API server
+	s, err := api.NewServer(port, mcpProxyServer, mcpService)
+	if err != nil {
+		return fmt.Errorf("failed to create server: %v", err)
 	}
 
 	fmt.Printf("MCPJungle server listening on :%s", port)
 	if err := s.Start(); err != nil {
-		return fmt.Errorf("failed to run the server: %w", err)
+		return fmt.Errorf("failed to run the server: %v", err)
 	}
 
 	return nil

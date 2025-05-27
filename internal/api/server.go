@@ -13,11 +13,12 @@ type Server struct {
 	port           string
 	router         *gin.Engine
 	mcpProxyServer *server.MCPServer
+	mcpService     *service.MCPService
 }
 
 // NewServer initializes a new Gin server for MCPJungle registry and MCP proxy
-func NewServer(port string, mcpProxyServer *server.MCPServer) (*Server, error) {
-	r, err := newRouter(mcpProxyServer)
+func NewServer(port string, mcpProxyServer *server.MCPServer, mcpService *service.MCPService) (*Server, error) {
+	r, err := newRouter(mcpProxyServer, mcpService)
 	if err != nil {
 		return nil, err
 	}
@@ -25,6 +26,7 @@ func NewServer(port string, mcpProxyServer *server.MCPServer) (*Server, error) {
 		port:           port,
 		router:         r,
 		mcpProxyServer: mcpProxyServer,
+		mcpService:     mcpService,
 	}
 	return s, nil
 }
@@ -38,7 +40,7 @@ func (s *Server) Start() error {
 }
 
 // newRouter sets up the Gin router with the MCP proxy server and API endpoints.
-func newRouter(mcpProxyServer *server.MCPServer) (*gin.Engine, error) {
+func newRouter(mcpProxyServer *server.MCPServer, mcpService *service.MCPService) (*gin.Engine, error) {
 	r := gin.Default()
 
 	r.GET(
@@ -49,21 +51,18 @@ func newRouter(mcpProxyServer *server.MCPServer) (*gin.Engine, error) {
 	)
 
 	// Set up the MCP proxy server on /mcp
-	if err := service.InitMCPProxyServer(mcpProxyServer); err != nil {
-		return nil, fmt.Errorf("failed to initialize MCP proxy server: %w", err)
-	}
 	streamableHttpServer := server.NewStreamableHTTPServer(mcpProxyServer)
 	r.Any("/mcp", gin.WrapH(streamableHttpServer))
 
 	// Setup API endpoints
 	apiV0 := r.Group(V0PathPrefix)
 	{
-		apiV0.POST("/servers", registerServerHandler(mcpProxyServer))
-		apiV0.DELETE("/servers/:name", deregisterServerHandler(mcpProxyServer))
-		apiV0.GET("/servers", listServersHandler())
-		apiV0.GET("/tools", listToolsHandler())
-		apiV0.POST("/tools/invoke", invokeToolHandler())
-		apiV0.GET("/tool", getToolHandler())
+		apiV0.POST("/servers", registerServerHandler(mcpService))
+		apiV0.DELETE("/servers/:name", deregisterServerHandler(mcpService))
+		apiV0.GET("/servers", listServersHandler(mcpService))
+		apiV0.GET("/tools", listToolsHandler(mcpService))
+		apiV0.POST("/tools/invoke", invokeToolHandler(mcpService))
+		apiV0.GET("/tool", getToolHandler(mcpService))
 	}
 
 	return r, nil

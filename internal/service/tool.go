@@ -9,11 +9,10 @@ import (
 	"github.com/duaraghav8/mcpjungle/internal/model"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/mark3labs/mcp-go/server"
 )
 
 // ListTools returns all tools registered in the registry.
-func ListTools() ([]model.Tool, error) {
+func (m *MCPService) ListTools() ([]model.Tool, error) {
 	var tools []model.Tool
 	if err := db.DB.Find(&tools).Error; err != nil {
 		return nil, err
@@ -30,12 +29,12 @@ func ListTools() ([]model.Tool, error) {
 }
 
 // ListToolsByServer fetches tools provided by an MCP server from the registry.
-func ListToolsByServer(name string) ([]model.Tool, error) {
+func (m *MCPService) ListToolsByServer(name string) ([]model.Tool, error) {
 	if err := validateServerName(name); err != nil {
 		return nil, err
 	}
 
-	s, err := GetMcpServer(name)
+	s, err := m.GetMcpServer(name)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get MCP server %s from DB: %w", name, err)
 	}
@@ -53,13 +52,13 @@ func ListToolsByServer(name string) ([]model.Tool, error) {
 	return tools, nil
 }
 
-func GetTool(name string) (*model.Tool, error) {
+func (m *MCPService) GetTool(name string) (*model.Tool, error) {
 	serverName, toolName, ok := splitServerToolName(name)
 	if !ok {
 		return nil, fmt.Errorf("invalid input: tool name does not contain a %s separator", serverToolNameSep)
 	}
 
-	s, err := GetMcpServer(serverName)
+	s, err := m.GetMcpServer(serverName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get MCP server %s from DB: %w", serverName, err)
 	}
@@ -74,13 +73,13 @@ func GetTool(name string) (*model.Tool, error) {
 }
 
 // InvokeTool invokes a tool from a registered MCP server and returns its response.
-func InvokeTool(ctx context.Context, name string, args map[string]any) (string, error) {
+func (m *MCPService) InvokeTool(ctx context.Context, name string, args map[string]any) (string, error) {
 	serverName, toolName, ok := splitServerToolName(name)
 	if !ok {
 		return "", fmt.Errorf("invalid input: tool name does not contain a %s separator", serverToolNameSep)
 	}
 
-	server, err := GetMcpServer(serverName)
+	serverModel, err := m.GetMcpServer(serverName)
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to get details about MCP server %s from DB: %w",
@@ -89,7 +88,7 @@ func InvokeTool(ctx context.Context, name string, args map[string]any) (string, 
 		)
 	}
 
-	mcpClient, err := createMcpServerConn(ctx, server.URL)
+	mcpClient, err := createMcpServerConn(ctx, serverModel.URL)
 	if err != nil {
 		return "", fmt.Errorf(
 			"failed to create connection to MCP server %s: %w", serverName, err,
@@ -122,7 +121,7 @@ func InvokeTool(ctx context.Context, name string, args map[string]any) (string, 
 }
 
 // registerServerTools fetches all tools from an MCP server and registers them in the DB.
-func registerServerTools(ctx context.Context, s *model.McpServer, c *client.Client, mcpProxy *server.MCPServer) error {
+func (m *MCPService) registerServerTools(ctx context.Context, s *model.McpServer, c *client.Client) error {
 	// fetch all tools from the server so they can be added to the DB
 	resp, err := c.ListTools(ctx, mcp.ListToolsRequest{})
 	if err != nil {
@@ -149,7 +148,7 @@ func registerServerTools(ctx context.Context, s *model.McpServer, c *client.Clie
 			// Set tool name to include the server name prefix to make it recognizable by MCPJungle
 			tool.Name = mergeServerToolNames(s.Name, tool.Name)
 			// add the tool to the MCP proxy server
-			mcpProxy.AddTool(tool, mcpProxyToolCallHandler)
+			m.mcpProxyServer.AddTool(tool, m.mcpProxyToolCallHandler)
 		}
 	}
 	return nil
@@ -157,9 +156,9 @@ func registerServerTools(ctx context.Context, s *model.McpServer, c *client.Clie
 
 // deregisterServerTools deletes all tools that belong to an MCP server from the DB.
 // It also removes the tools from the MCP proxy server.
-func deregisterServerTools(s *model.McpServer, mcpProxy *server.MCPServer) error {
+func (m *MCPService) deregisterServerTools(s *model.McpServer) error {
 	// load all tools for the server from the DB so we can delete them from the MCP proxy
-	tools, err := ListToolsByServer(s.Name)
+	tools, err := m.ListToolsByServer(s.Name)
 	if err != nil {
 		return fmt.Errorf("failed to list tools for server %s: %w", s.Name, err)
 	}
@@ -174,7 +173,7 @@ func deregisterServerTools(s *model.McpServer, mcpProxy *server.MCPServer) error
 	for i, tool := range tools {
 		toolNames[i] = tool.Name
 	}
-	mcpProxy.DeleteTools(toolNames...)
+	m.mcpProxyServer.DeleteTools(toolNames...)
 
 	return nil
 }

@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func listToolsHandler() gin.HandlerFunc {
+func listToolsHandler(mcpService *service.MCPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		server := c.Query("server")
 		var (
@@ -18,10 +18,10 @@ func listToolsHandler() gin.HandlerFunc {
 		)
 		if server == "" {
 			// no server specified, list all tools
-			tools, err = service.ListTools()
+			tools, err = mcpService.ListTools()
 		} else {
 			// server specified, list tools for that server
-			tools, err = service.ListToolsByServer(server)
+			tools, err = mcpService.ListToolsByServer(server)
 		}
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -32,7 +32,7 @@ func listToolsHandler() gin.HandlerFunc {
 }
 
 // invokeToolHandler forwards the JSON body to the tool URL and streams response back.
-func invokeToolHandler() gin.HandlerFunc {
+func invokeToolHandler(mcpService *service.MCPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var args map[string]any
 		if err := json.NewDecoder(c.Request.Body).Decode(&args); err != nil {
@@ -54,7 +54,7 @@ func invokeToolHandler() gin.HandlerFunc {
 			return
 		}
 
-		resp, err := service.InvokeTool(c, name, args)
+		resp, err := mcpService.InvokeTool(c, name, args)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to invoke tool: " + err.Error()})
 			return
@@ -65,7 +65,7 @@ func invokeToolHandler() gin.HandlerFunc {
 }
 
 // getToolHandler returns the tool with the given name.
-func getToolHandler() gin.HandlerFunc {
+func getToolHandler(mcpService *service.MCPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// tool name has to be supplied as a query param because it contains slash.
 		// cannot be supplied as a path param.
@@ -74,7 +74,7 @@ func getToolHandler() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "missing 'name' query parameter"})
 			return
 		}
-		tool, err := service.GetTool(name)
+		tool, err := mcpService.GetTool(name)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get tool: " + err.Error()})
 			return
