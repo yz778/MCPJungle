@@ -1,0 +1,55 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: mcpjungle
+    main: ./main.go
+    binary: mcpjungle
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X github.com/duaraghav8/mcpjungle/cmd.Version={{.Version}}
+
+archives:
+  - formats: [tar.gz]
+    # this name template makes the OS and Arch compatible with the results of `uname`.
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: "checksums.txt"
+
+signs:
+  - artifacts: checksum
+
+changelog:
+  disable: true
+
+brews:
+  - url_template: "https://github.com/duaraghav8/MCPJungle/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    commit_author:
+      name: "Raghav Dua"
+    homepage: "https://github.com/duaraghav8/MCPJungle"
+    description: "Self-hosted MCP tool registry for private AI agents"
+    repository:
+      owner: "duaraghav8"
+      name: "homebrew-mcpjungle"
