@@ -6,8 +6,8 @@ import (
 	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/migrations"
 	"github.com/joho/godotenv"
+	"github.com/mark3labs/mcp-go/server"
 	"github.com/spf13/cobra"
-	"log"
 	"os"
 )
 
@@ -44,11 +44,7 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to run migrations: %v", err)
 	}
 
-	s, err := api.NewServer()
-	if err != nil {
-		return fmt.Errorf("failed to create server: %v", err)
-	}
-
+	// determine the port to bind the server to
 	port := startServerCmdBindPort
 	if port == "" {
 		port = os.Getenv(BindPortEnvVar)
@@ -57,9 +53,22 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		port = BindPortDefault
 	}
 
-	log.Printf("MCPJungle server listening on :%s", port)
-	if err := s.Run(":" + port); err != nil {
-		return fmt.Errorf("failed to run the server: %v", err)
+	// create the MCP proxy server
+	mcpProxyServer := server.NewMCPServer(
+		"MCPJungle Proxy MCP Server",
+		"0.0.1",
+		server.WithToolCapabilities(true),
+	)
+
+	// create the API server
+	s, err := api.NewServer(port, mcpProxyServer)
+	if err != nil {
+		return fmt.Errorf("failed to create server: %w", err)
+	}
+
+	fmt.Printf("MCPJungle server listening on :%s", port)
+	if err := s.Start(); err != nil {
+		return fmt.Errorf("failed to run the server: %w", err)
 	}
 
 	return nil
