@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/model"
+	"github.com/mark3labs/mcp-go/server"
 )
 
 // RegisterMcpServer registers a new MCP server in the database.
 // It also registers all the Tools provided by the server.
 // Tool registration is on best-effort basis and does not fail the server registration.
-func RegisterMcpServer(ctx context.Context, s *model.McpServer) error {
+// Registered tools are also added to the MCP proxy server.
+func RegisterMcpServer(ctx context.Context, s *model.McpServer, mcpProxy *server.MCPServer) error {
 	if err := validateServerName(s.Name); err != nil {
 		return err
 	}
@@ -27,7 +29,7 @@ func RegisterMcpServer(ctx context.Context, s *model.McpServer) error {
 		return fmt.Errorf("failed to register mcp server: %w", err)
 	}
 
-	if err = registerServerTools(ctx, s, c); err != nil {
+	if err = registerServerTools(ctx, s, c, mcpProxy); err != nil {
 		return fmt.Errorf("failed to register tools for MCP server %s: %w", s.Name, err)
 	}
 	return nil
@@ -36,12 +38,13 @@ func RegisterMcpServer(ctx context.Context, s *model.McpServer) error {
 // DeregisterMcpServer deregisters an MCP server from the database.
 // It also deregisters all the tools registered by the server.
 // If even a singe tool fails to deregister, the server deregistration fails.
-func DeregisterMcpServer(name string) error {
+// A deregistered tool is also removed from the MCP proxy server.
+func DeregisterMcpServer(name string, mcpProxy *server.MCPServer) error {
 	s, err := GetMcpServer(name)
 	if err != nil {
 		return fmt.Errorf("failed to get MCP server %s from DB: %w", name, err)
 	}
-	if err := deregisterServerTools(s); err != nil {
+	if err := deregisterServerTools(s, mcpProxy); err != nil {
 		return fmt.Errorf(
 			"failed to deregister tools for server %s, cannot proceed with server deregistration: %w",
 			name,

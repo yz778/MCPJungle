@@ -9,6 +9,7 @@ import (
 	"github.com/duaraghav8/mcpjungle/internal/model"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mark3labs/mcp-go/server"
 )
 
 // ListTools returns all tools registered in the registry.
@@ -121,7 +122,7 @@ func InvokeTool(ctx context.Context, name string, args map[string]any) (string, 
 }
 
 // registerServerTools fetches all tools from an MCP server and registers them in the DB.
-func registerServerTools(ctx context.Context, s *model.McpServer, c *client.Client) error {
+func registerServerTools(ctx context.Context, s *model.McpServer, c *client.Client, mcpProxy *server.MCPServer) error {
 	// fetch all tools from the server so they can be added to the DB
 	resp, err := c.ListTools(ctx, mcp.ListToolsRequest{})
 	if err != nil {
@@ -143,16 +144,37 @@ func registerServerTools(ctx context.Context, s *model.McpServer, c *client.Clie
 			// If registration of a tool fails, we should not fail the entire server registration.
 			// Instead, continue with the next tool.
 
-			//return fmt.Errorf("failed to register tool %s in DB: %w", mergeServerToolNames(s.Name, t.Name), err)
+			//fmt.Printf("failed to register tool %s in DB: %w", mergeServerToolNames(s.Name, t.Name), err)
+		} else {
+			// Set tool name to include the server name prefix to make it recognizable by MCPJungle
+			tool.Name = mergeServerToolNames(s.Name, tool.Name)
+			// add the tool to the MCP proxy server
+			mcpProxy.AddTool(tool, mcpProxyToolCallHandler)
 		}
 	}
 	return nil
 }
 
 // deregisterServerTools deletes all tools that belong to an MCP server from the DB.
-func deregisterServerTools(s *model.McpServer) error {
+// It also removes the tools from the MCP proxy server.
+func deregisterServerTools(s *model.McpServer, mcpProxy *server.MCPServer) error {
+	// load all tools for the server from the DB so we can delete them from the MCP proxy
+	tools, err := ListToolsByServer(s.Name)
+	if err != nil {
+		return fmt.Errorf("failed to list tools for server %s: %w", s.Name, err)
+	}
+
+	// now it's safe to delete the server's tools from the DB
 	if err := db.DB.Where("server_id = ?", s.ID).Delete(&model.Tool{}).Error; err != nil {
 		return fmt.Errorf("failed to delete tools for server %s: %w", s.Name, err)
 	}
+
+	// delete tools from MCP proxy server
+	toolNames := make([]string, len(tools), len(tools))
+	for i, tool := range tools {
+		toolNames[i] = tool.Name
+	}
+	mcpProxy.DeleteTools(toolNames...)
+
 	return nil
 }
