@@ -38,10 +38,13 @@ func init() {
 func runStartServer(cmd *cobra.Command, args []string) error {
 	_ = godotenv.Load()
 
+	// connect to the DB and run migrations
 	dsn := os.Getenv("DATABASE_URL")
-	db.Init(dsn)
-
-	if err := migrations.Migrate(); err != nil {
+	dbConn, err := db.NewDBConnection(dsn)
+	if err != nil {
+		return err
+	}
+	if err := migrations.Migrate(dbConn); err != nil {
 		return fmt.Errorf("failed to run migrations: %v", err)
 	}
 
@@ -61,7 +64,7 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		server.WithToolCapabilities(true),
 	)
 
-	mcpService, err := service.NewMCPService(mcpProxyServer)
+	mcpService, err := service.NewMCPService(dbConn, mcpProxyServer)
 	if err != nil {
 		return fmt.Errorf("failed to create MCP service: %v", err)
 	}

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/model"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
@@ -14,13 +13,13 @@ import (
 // ListTools returns all tools registered in the registry.
 func (m *MCPService) ListTools() ([]model.Tool, error) {
 	var tools []model.Tool
-	if err := db.DB.Find(&tools).Error; err != nil {
+	if err := m.db.Find(&tools).Error; err != nil {
 		return nil, err
 	}
 	// prepend server name to tool names to ensure we only return the unique names of tools to user
 	for i := range tools {
 		var s model.McpServer
-		if err := db.DB.First(&s, "id = ?", tools[i].ServerID).Error; err != nil {
+		if err := m.db.First(&s, "id = ?", tools[i].ServerID).Error; err != nil {
 			return nil, fmt.Errorf("failed to get server for tool %s: %w", tools[i].Name, err)
 		}
 		tools[i].Name = mergeServerToolNames(s.Name, tools[i].Name)
@@ -40,7 +39,7 @@ func (m *MCPService) ListToolsByServer(name string) ([]model.Tool, error) {
 	}
 
 	var tools []model.Tool
-	if err := db.DB.Where("server_id = ?", s.ID).Find(&tools).Error; err != nil {
+	if err := m.db.Where("server_id = ?", s.ID).Find(&tools).Error; err != nil {
 		return nil, fmt.Errorf("failed to get tools for server %s from DB: %w", name, err)
 	}
 
@@ -64,7 +63,7 @@ func (m *MCPService) GetTool(name string) (*model.Tool, error) {
 	}
 
 	var tool model.Tool
-	if err := db.DB.Where("server_id = ? AND name = ?", s.ID, toolName).First(&tool).Error; err != nil {
+	if err := m.db.Where("server_id = ? AND name = ?", s.ID, toolName).First(&tool).Error; err != nil {
 		return nil, fmt.Errorf("failed to get tool %s from DB: %w", name, err)
 	}
 	// set the tool name back to the full name including server name
@@ -138,7 +137,7 @@ func (m *MCPService) registerServerTools(ctx context.Context, s *model.McpServer
 			Description: tool.Description,
 			InputSchema: jsonSchema,
 		}
-		if err := db.DB.Create(t).Error; err != nil {
+		if err := m.db.Create(t).Error; err != nil {
 			// TODO: Add error log about this failure
 			// If registration of a tool fails, we should not fail the entire server registration.
 			// Instead, continue with the next tool.
@@ -164,7 +163,7 @@ func (m *MCPService) deregisterServerTools(s *model.McpServer) error {
 	}
 
 	// now it's safe to delete the server's tools from the DB
-	if err := db.DB.Where("server_id = ?", s.ID).Delete(&model.Tool{}).Error; err != nil {
+	if err := m.db.Where("server_id = ?", s.ID).Delete(&model.Tool{}).Error; err != nil {
 		return fmt.Errorf("failed to delete tools for server %s: %w", s.Name, err)
 	}
 

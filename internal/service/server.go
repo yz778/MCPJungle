@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/duaraghav8/mcpjungle/internal/db"
 	"github.com/duaraghav8/mcpjungle/internal/model"
 )
 
@@ -24,7 +23,7 @@ func (m *MCPService) RegisterMcpServer(ctx context.Context, s *model.McpServer) 
 	defer c.Close()
 
 	// register the server in the DB
-	if err := db.DB.Create(s).Error; err != nil {
+	if err := m.db.Create(s).Error; err != nil {
 		return fmt.Errorf("failed to register mcp server: %w", err)
 	}
 
@@ -50,7 +49,7 @@ func (m *MCPService) DeregisterMcpServer(name string) error {
 			err,
 		)
 	}
-	if err := db.DB.Delete(s).Error; err != nil {
+	if err := m.db.Delete(s).Error; err != nil {
 		return fmt.Errorf("failed to deregister server %s: %w", name, err)
 	}
 	return nil
@@ -59,7 +58,7 @@ func (m *MCPService) DeregisterMcpServer(name string) error {
 // ListMcpServers returns all registered MCP servers.
 func (m *MCPService) ListMcpServers() ([]model.McpServer, error) {
 	var servers []model.McpServer
-	if err := db.DB.Find(&servers).Error; err != nil {
+	if err := m.db.Find(&servers).Error; err != nil {
 		return nil, err
 	}
 	return servers, nil
@@ -68,7 +67,7 @@ func (m *MCPService) ListMcpServers() ([]model.McpServer, error) {
 // GetMcpServer fetches a server from the database by name.
 func (m *MCPService) GetMcpServer(name string) (*model.McpServer, error) {
 	var serverModel model.McpServer
-	if err := db.DB.Where("name = ?", name).First(&serverModel).Error; err != nil {
+	if err := m.db.Where("name = ?", name).First(&serverModel).Error; err != nil {
 		return nil, err
 	}
 	return &serverModel, nil

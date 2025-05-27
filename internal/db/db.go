@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"log"
 
 	"gorm.io/driver/postgres"
@@ -8,10 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+// TODO: Turn this into a singleton class.
+// Only one database connection should be created and used throughout the application.
 
-// Init initialises the global DB connection.
-func Init(dsn string) {
+// NewDBConnection creates a new database connection based on the provided DSN.
+// If the DSN is empty, it falls back to an embedded SQLite database at "./mcp.db".
+func NewDBConnection(dsn string) (*gorm.DB, error) {
 	var dialector gorm.Dialector
 	if dsn == "" {
 		log.Println("[db] DATABASE_URL not set – falling back to embedded SQLite ./mcp.db")
@@ -20,9 +23,9 @@ func Init(dsn string) {
 		dialector = postgres.Open(dsn)
 	}
 
-	var err error
-	DB, err = gorm.Open(dialector, &gorm.Config{})
+	db, err := gorm.Open(dialector, &gorm.Config{})
 	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
+	return db, nil
 }

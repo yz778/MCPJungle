@@ -3,18 +3,21 @@ package service
 import (
 	"fmt"
 	"github.com/mark3labs/mcp-go/server"
+	"gorm.io/gorm"
 )
 
 // MCPService coordinates operations amongst the registry database, mcp proxy server and upstream MCP servers.
 // It is responsible for maintaining data consistency and providing a unified interface for MCP operations.
 type MCPService struct {
+	db             *gorm.DB
 	mcpProxyServer *server.MCPServer
 }
 
 // NewMCPService creates a new instance of MCPService.
 // It initializes the MCP proxy server by loading all registered tools from the database.
-func NewMCPService(mcpProxyServer *server.MCPServer) (*MCPService, error) {
+func NewMCPService(db *gorm.DB, mcpProxyServer *server.MCPServer) (*MCPService, error) {
 	s := &MCPService{
+		db:             db,
 		mcpProxyServer: mcpProxyServer,
 	}
 	if err := s.initMCPProxyServer(); err != nil {
