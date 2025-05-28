@@ -1,34 +1,31 @@
-# MCPJungle
-Open-source, Selft-hosted MCP tool Catalogue for your AI agents
+<h1 align="center">
+  :deciduous_tree: MCPJungle :deciduous_tree:
+</h1>
+<p align="center">
+  Self-hosted MCP Server registry for your private AI agents
+</p>
 
-Self‑hosted registry for [Model Context Protocol](https://github.com/modelcontextprotocol/spec) compliant tools.
+MCPJungle is a single source-of-truth registry for all [Model Context Protocol](https://modelcontextprotocol.io/introduction) based Servers running in your Organisation.
 
-## Quickstart (Docker Compose)
+🧑‍💻 Developers use it to register & manage MCP servers and the tools they provide from a central place.
 
-```bash
-git clone https://github.com/your-org/mcp-registry.git
-cd mcp-registry
-docker compose up --build
-```
+🤖 AI Agents use it to discover and consume tools across all MCP servers.
 
-The API is now on `http://localhost:8080`.
+![diagram](./assets/mcpjungle-diagram/mcpjungle-diagram.png)
 
-### CLI usage
+<p align="center">MCPJungle is the only MCP Server your agents need to connect to!</p>
 
-```bash
-# Start server
-mcp serve --port 8080
+## Installation
 
-# Client ops
-mcp register --name weather --url https://weather.example.com --type rest_api
-mcp tools
-mcp invoke weather --input '{"city":"Amsterdam"}'
-```
+## Usage
 
----
+### Concepts
+Explain in the context of mcpjungle:
 
-## Local Dev
+HTTP Server, MCP Server, canonical tool name
 
-```bash
-export DATABASE_URL="postgres://mcp:mcp@localhost:5432/mcp?sslmode=disable"
-```
+Database: Sqlite, Postgres
+
+MCPJungle is designed to be run on a server. Can also run locally.
+
+## Development
