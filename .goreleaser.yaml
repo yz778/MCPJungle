@@ -11,6 +11,8 @@ builds:
   - id: mcpjungle
     main: ./main.go
     binary: mcpjungle
+    env:
+      - CGO_ENABLED=1
     goos:
       - linux
       - windows
