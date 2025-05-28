@@ -24,6 +24,9 @@ go.work.sum
 # env file
 .env
 
+# manual additions
 .idea/
+.DS_STORE
+
 # Added by goreleaser init:
 dist/

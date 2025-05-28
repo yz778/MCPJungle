@@ -9,7 +9,7 @@ MCPJungle is a single source-of-truth registry for all [Model Context Protocol](
 
 🧑‍💻 Developers use it to register & manage MCP servers and the tools they provide from a central place.
 
-🤖 AI Agents use it to discover and consume tools across all MCP servers.
+🤖 AI Agents use it to discover and consume all these tools from a single MCP Server.
 
 ![diagram](./assets/mcpjungle-diagram/mcpjungle-diagram.png)
 
@@ -74,6 +74,9 @@ $ mcpjungle register --name my_mcp_server --description "Sample mcp server provi
 ```
 
 The registry will now start tracking this MCP server and load its tools.
+
+![register a MCP server in MCPJungle](./assets/register-mcp-server.png)
+
 All tools provided by this server are now accessible via MCPJungle:
 
 ```bash
@@ -86,6 +89,8 @@ $ mcpjungle usage my_mcp_server/calculator/multiply
 $ mcpjungle invoke my_mcp_server/calculator/multiply --input '{"a": 100, "b": 50}'
 
 ```
+
+![Call a tool via MCPJungle Proxy MCP server](./assets/tool-call.png)
 
 > [!NOTE]
 > A tool in MCPJungle must be referred to by its canonical name which follows the pattern `<mcp-server-name>/<tool-name>`.
@@ -101,3 +106,32 @@ $ mcpjungle deregister my_mcp_server
 After running this, the registry will stop tracking this server and its tools will no longer be available to use.
 
 ## Development
+
+### Build for local testing
+```bash
+# Single binary for your current system
+$ goreleaser build --single-target --clean --snapshot
+
+# Binaries for all supported platforms
+$ goreleaser release --snapshot --clean
+```
+
+### Create a new release
+1. Create a Git Tag with the new version
+
+```bash
+git tag -a v0.1.0 -m "Release version 0.1.0"
+git push origin v0.1.0
+```
+
+2. Release
+```bash
+# Make sure GPG is present on your system and you have a default key which is added to Github.
+
+# set your github access token
+export GITHUB_TOKEN="<your GH token>"
+
+goreleaser release --clean
+```
+
+This will create a new release under Releases and also make it available via Homebrew.
