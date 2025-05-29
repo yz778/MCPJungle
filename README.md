@@ -68,14 +68,18 @@ $ mcpjungle start
 ### Client
 Once the server is up, you can use the CLI to interact with it.
 
-Register a running MCP server
+Let's say you're already running a MCP server locally at `http://127.0.0.1:8000/mcp` which provides basic math tools like `add`, `subtract`, etc.
+
+You can register this MCP server with MCPJungle:
 ```bash
-$ mcpjungle register --name my_mcp_server --description "Sample mcp server providing some tools" --url http://127.0.0.1:8000/mcp
+$ mcpjungle register --name my_math_server --description "Provides some basic math tools" --url http://127.0.0.1:8000/mcp
 ```
 
 The registry will now start tracking this MCP server and load its tools.
 
 ![register a MCP server in MCPJungle](./assets/register-mcp-server.png)
+
+**Note**: MCPJungle currently only supports MCP Servers using the [Streamable HTTP Transport](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http).
 
 All tools provided by this server are now accessible via MCPJungle:
 
@@ -83,10 +87,10 @@ All tools provided by this server are now accessible via MCPJungle:
 $ mcpjungle list tools
 
 # Check tool usage
-$ mcpjungle usage my_mcp_server/calculator/multiply
+$ mcpjungle usage my_math_server/calculator/multiply
 
 # Call a tool
-$ mcpjungle invoke my_mcp_server/calculator/multiply --input '{"a": 100, "b": 50}'
+$ mcpjungle invoke my_math_server/calculator/multiply --input '{"a": 100, "b": 50}'
 
 ```
 
@@ -95,17 +99,21 @@ $ mcpjungle invoke my_mcp_server/calculator/multiply --input '{"a": 100, "b": 50
 > [!NOTE]
 > A tool in MCPJungle must be referred to by its canonical name which follows the pattern `<mcp-server-name>/<tool-name>`.
 >
-> eg- If I registered a MCP server `github` which provides a tool called `git_commit`, you can invoke it in MCPJungle using the name `github/git_commit`.
+> eg- If you register a MCP server `github` which provides a tool called `git_commit`, you can invoke it in MCPJungle using the name `github/git_commit`.
+> 
+> Your AI Agent must also use this canonical name to call the tool via MCPJungle.
 
 
 Finally, you can remove a MCP server from the registry:
 ```bash
-$ mcpjungle deregister my_mcp_server
+$ mcpjungle deregister my_math_server
 ```
 
 After running this, the registry will stop tracking this server and its tools will no longer be available to use.
 
 ## Development
+
+This section contains notes for maintainers and contributors of MCPJungle.
 
 ### Build for local testing
 ```bash
