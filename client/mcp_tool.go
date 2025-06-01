@@ -96,10 +96,15 @@ func (c *Client) InvokeTool(name string, input map[string]any) (string, error) {
 	defer resp.Body.Close()
 
 	respBody, _ := io.ReadAll(resp.Body)
-	respBodyStr := string(respBody)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("request failed with status: %d, message: %s", resp.StatusCode, respBodyStr)
+		return "", fmt.Errorf("request failed with status: %d, message: %s", resp.StatusCode, string(respBody))
 	}
-	return respBodyStr, nil
+
+	var result string
+	if err := json.Unmarshal(respBody, &result); err != nil {
+		return "", fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return result, nil
 }
