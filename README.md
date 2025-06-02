@@ -120,6 +120,9 @@ This section contains notes for maintainers and contributors of MCPJungle.
 # Single binary for your current system
 $ goreleaser build --single-target --clean --snapshot
 
+# Test the full release assets (binaries, docker image) without publishing
+goreleaser release --clean --snapshot --skip publish
+
 # Binaries for all supported platforms
 $ goreleaser release --snapshot --clean
 ```
