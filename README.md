@@ -23,7 +23,6 @@ MCPJungle is a single source-of-truth registry for all [Model Context Protocol](
 > We're actively working to make it production-ready.
 > You can provide your feedback by [creating an Issue](https://github.com/duaraghav8/MCPJungle/issues) in this repository.
 
-
 MPCJungle is shipped as a stand-alone binary.
 
 You can either download it from the [Releases](https://github.com/duaraghav8/MCPJungle/releases) Page or use [Homebrew](https://brew.sh/) to install it:
@@ -44,16 +43,21 @@ $ mcpjungle version
 
 ## Usage
 
-MCPJungle has a Client-Server architecture and the binary allows you to run both.
+MCPJungle has a Client-Server architecture and the binary lets you run both a Server and a Client.
 
 ### Server
-First, start a server locally:
+For running the MCPJungle server locally, docker compose is the recommended way:
+```shell
+curl -O https://raw.githubusercontent.com/duaraghav8/MCPJungle/refs/heads/main/docker-compose.yaml
+docker-compose up -d
+```
 
+Otherwise, you can run the server directly using the binary:
 ```bash
 $ mcpjungle start
 ```
 
-This starts the main registry server responsible for managing all MCP servers.
+This starts the main registry server responsible for managing all MCP servers. It is accessible on port `8080` by default.
 
 The server also exposes its own MCP server at `/mcp` for AI Agents to discover and call Tools provided by the registered MCP Servers.
 
@@ -65,6 +69,8 @@ $ export DATABASE_URL=postgres://admin:root@localhost:5432/mcpjungle_db
 $ mcpjungle start
 ```
 
+If you use docker-compose, the DB is automatically created and managed for you.
+
 ### Client
 Once the server is up, you can use the CLI to interact with it.
 
@@ -72,7 +78,12 @@ Let's say you're already running a MCP server locally at `http://127.0.0.1:8000/
 
 You can register this MCP server with MCPJungle:
 ```bash
-$ mcpjungle register --name my_math_server --description "Provides some basic math tools" --url http://127.0.0.1:8000/mcp
+$ mcpjungle register --name calculator --description "Provides some basic math tools" --url http://127.0.0.1:8000/mcp
+```
+
+If you used docker-compose to run the server, and you're not on Linux, you will have to use `host.docker.internal` instead of your local loopback address.
+```bash
+$ mcpjungle register --name calculator --description "Provides some basic math tools" --url http://host.docker.internal:8000/mcp
 ```
 
 The registry will now start tracking this MCP server and load its tools.
@@ -87,10 +98,10 @@ All tools provided by this server are now accessible via MCPJungle:
 $ mcpjungle list tools
 
 # Check tool usage
-$ mcpjungle usage my_math_server/calculator/multiply
+$ mcpjungle usage calculator/multiply
 
 # Call a tool
-$ mcpjungle invoke my_math_server/calculator/multiply --input '{"a": 100, "b": 50}'
+$ mcpjungle invoke calculator/multiply --input '{"a": 100, "b": 50}'
 
 ```
 
@@ -106,7 +117,7 @@ $ mcpjungle invoke my_math_server/calculator/multiply --input '{"a": 100, "b": 5
 
 Finally, you can remove a MCP server from the registry:
 ```bash
-$ mcpjungle deregister my_math_server
+$ mcpjungle deregister calculator
 ```
 
 After running this, the registry will stop tracking this server and its tools will no longer be available to use.
