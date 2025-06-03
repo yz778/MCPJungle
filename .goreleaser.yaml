@@ -54,3 +54,7 @@ brews:
     repository:
       owner: "duaraghav8"
       name: "homebrew-mcpjungle"
+
+dockers:
+  - image_templates:
+      - duaraghav8/mcpjungle
