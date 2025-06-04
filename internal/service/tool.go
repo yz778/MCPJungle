@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/duaraghav8/mcpjungle/internal/model"
+	"github.com/duaraghav8/mcpjungle/internal/types"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
 )
@@ -72,15 +73,14 @@ func (m *MCPService) GetTool(name string) (*model.Tool, error) {
 }
 
 // InvokeTool invokes a tool from a registered MCP server and returns its response.
-func (m *MCPService) InvokeTool(ctx context.Context, name string, args map[string]any) (string, error) {
+func (m *MCPService) InvokeTool(ctx context.Context, name string, args map[string]any) (*types.ToolInvokeResult, error) {
 	serverName, toolName, ok := splitServerToolName(name)
 	if !ok {
-		return "", fmt.Errorf("invalid input: tool name does not contain a %s separator", serverToolNameSep)
+		return nil, fmt.Errorf("invalid input: tool name does not contain a %s separator", serverToolNameSep)
 	}
-
 	serverModel, err := m.GetMcpServer(serverName)
 	if err != nil {
-		return "", fmt.Errorf(
+		return nil, fmt.Errorf(
 			"failed to get details about MCP server %s from DB: %w",
 			serverName,
 			err,
@@ -89,7 +89,7 @@ func (m *MCPService) InvokeTool(ctx context.Context, name string, args map[strin
 
 	mcpClient, err := createMcpServerConn(ctx, serverModel.URL)
 	if err != nil {
-		return "", fmt.Errorf(
+		return nil, fmt.Errorf(
 			"failed to create connection to MCP server %s: %w", serverName, err,
 		)
 	}
@@ -104,19 +104,19 @@ func (m *MCPService) InvokeTool(ctx context.Context, name string, args map[strin
 	// TODO: detect this and return an error if the tool is not found.
 	callToolResp, err := mcpClient.CallTool(ctx, callToolReq)
 	if err != nil {
-		return "", fmt.Errorf(
-			"failed to call tool %s on MCP server %s: %w",
-			toolName,
-			serverName,
-			err,
-		)
+		return nil, fmt.Errorf("failed to call tool %s on MCP server %s: %w", toolName, serverName, err)
 	}
-
 	textContent, ok := callToolResp.Content[0].(mcp.TextContent)
 	if !ok {
-		return "", errors.New("failed to get text content from tool response")
+		return nil, errors.New("failed to get text content from tool response (only text output is supported for now)")
 	}
-	return textContent.Text, nil
+
+	result := &types.ToolInvokeResult{
+		Meta:        callToolResp.Meta,
+		IsError:     callToolResp.IsError,
+		TextContent: textContent.Text,
+	}
+	return result, nil
 }
 
 // registerServerTools fetches all tools from an MCP server and registers them in the DB.

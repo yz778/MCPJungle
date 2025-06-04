@@ -27,13 +27,24 @@ func runInvokeTool(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("invalid input: %w", err)
 	}
 
-	resp, err := apiClient.InvokeTool(args[0], input)
+	result, err := apiClient.InvokeTool(args[0], input)
 	if err != nil {
 		return fmt.Errorf("failed to invoke tool: %w", err)
 	}
 
-	fmt.Println("Response from tool:")
+	if result.IsError {
+		fmt.Println("The tool returned an error:")
+		for k, v := range result.Meta {
+			fmt.Printf("%s: %v\n", k, v)
+		}
+	} else {
+		fmt.Println("Response from tool:")
+	}
+
+	// result text needs to be printed regardless of whether the tool returned an error or not
+	// because it may contain useful information
 	fmt.Println()
-	fmt.Println(resp)
+	fmt.Println(result.TextContent)
+
 	return nil
 }

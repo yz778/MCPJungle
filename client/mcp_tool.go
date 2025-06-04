@@ -22,6 +22,12 @@ type Tool struct {
 	InputSchema ToolInputSchema `json:"input_schema"`
 }
 
+type ToolInvokeResult struct {
+	Meta        map[string]any `json:"_meta,omitempty"`
+	IsError     bool           `json:"isError,omitempty"`
+	TextContent string         `json:"textContent"`
+}
+
 // ListTools fetches the list of tools, optionally filtered by server name.
 func (c *Client) ListTools(server string) ([]*Tool, error) {
 	u, _ := c.constructAPIEndpoint("/tools")
@@ -77,7 +83,7 @@ func (c *Client) GetTool(name string) (*Tool, error) {
 
 // InvokeTool sends a JSON payload to invoke a tool.
 // For now, this function only supports invoking tools that return a string response.
-func (c *Client) InvokeTool(name string, input map[string]any) (string, error) {
+func (c *Client) InvokeTool(name string, input map[string]any) (*ToolInvokeResult, error) {
 	// We need to insert the tool name into the POST payload
 	// In order not to mutate the user-supplied input, create a shallow copy of the input
 	// and add the name field to it.
@@ -91,19 +97,19 @@ func (c *Client) InvokeTool(name string, input map[string]any) (string, error) {
 	u, _ := c.constructAPIEndpoint("/tools/invoke")
 	resp, err := c.HTTPClient.Post(u, "application/json", bytes.NewReader(body))
 	if err != nil {
-		return "", fmt.Errorf("request to server failed: %w", err)
+		return nil, fmt.Errorf("request to server failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	respBody, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("request failed with status: %d, message: %s", resp.StatusCode, string(respBody))
+		return nil, fmt.Errorf("request failed with status: %d, message: %s", resp.StatusCode, string(respBody))
 	}
 
-	var result string
+	var result *ToolInvokeResult
 	if err := json.Unmarshal(respBody, &result); err != nil {
-		return "", fmt.Errorf("failed to decode response: %w", err)
+		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	return result, nil
