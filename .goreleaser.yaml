@@ -55,6 +55,11 @@ brews:
       owner: "duaraghav8"
       name: "homebrew-mcpjungle"
 
-dockers:
-  - image_templates:
+kos:
+  - id: mcpjungle
+    main: .
+    repositories:
       - duaraghav8/mcpjungle
+    platforms:
+      - linux/amd64
+      - linux/arm64
