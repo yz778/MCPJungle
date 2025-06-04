@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/duaraghav8/mcpjungle/internal/model"
 	"github.com/duaraghav8/mcpjungle/internal/types"
@@ -99,22 +98,32 @@ func (m *MCPService) InvokeTool(ctx context.Context, name string, args map[strin
 	callToolReq.Params.Name = toolName
 	callToolReq.Params.Arguments = args
 
-	// CallTool() doesn't return an error if the tool is not found.
-	// Instead, it returns a "not found" message in the response.
-	// TODO: detect this and return an error if the tool is not found.
 	callToolResp, err := mcpClient.CallTool(ctx, callToolReq)
 	if err != nil {
 		return nil, fmt.Errorf("failed to call tool %s on MCP server %s: %w", toolName, serverName, err)
 	}
-	textContent, ok := callToolResp.Content[0].(mcp.TextContent)
-	if !ok {
-		return nil, errors.New("failed to get text content from tool response (only text output is supported for now)")
+
+	// NOTE: callToolResp.Content is a list of Content objects.
+	// If the tool returns a list as its result, it gets converted to a list of Content objects.
+	// But if the tool returns any other type of object (string, map, number, etc), then it is
+	// completely available in Content[0].
+
+	textContent := make([]string, 0, len(callToolResp.Content))
+	for _, item := range callToolResp.Content {
+		var value string
+		tc, ok := mcp.AsTextContent(item)
+		if ok {
+			value = tc.Text
+		} else {
+			value = fmt.Sprintf("<failed to decode item into string>: %v", item)
+		}
+		textContent = append(textContent, value)
 	}
 
 	result := &types.ToolInvokeResult{
 		Meta:        callToolResp.Meta,
 		IsError:     callToolResp.IsError,
-		TextContent: textContent.Text,
+		TextContent: textContent,
 	}
 	return result, nil
 }

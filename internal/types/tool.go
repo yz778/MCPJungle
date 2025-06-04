@@ -9,5 +9,5 @@ type ToolInvokeResult struct {
 
 	// TextContent contains the text output of the tool invocation.
 	// As of now, MCPJungle only supports text output from tools.
-	TextContent string `json:"textContent"`
+	TextContent []string `json:"textContent"`
 }

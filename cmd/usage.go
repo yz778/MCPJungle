@@ -28,6 +28,11 @@ func runGetToolUsage(cmd *cobra.Command, args []string) error {
 	fmt.Println(t.Name)
 	fmt.Println(t.Description)
 
+	if len(t.InputSchema.Properties) == 0 {
+		fmt.Println("This tool does not require any input parameters.")
+		return nil
+	}
+
 	fmt.Println()
 	fmt.Println("Input Parameters:")
 	for k, v := range t.InputSchema.Properties {

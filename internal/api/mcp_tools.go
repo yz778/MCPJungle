@@ -54,6 +54,9 @@ func invokeToolHandler(mcpService *service.MCPService) gin.HandlerFunc {
 			return
 		}
 
+		// remove name from args since it was an input for the api, not for the tool
+		delete(args, "name")
+
 		resp, err := mcpService.InvokeTool(c, name, args)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to invoke tool: " + err.Error()})

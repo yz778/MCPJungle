@@ -44,7 +44,9 @@ func runInvokeTool(cmd *cobra.Command, args []string) error {
 	// result text needs to be printed regardless of whether the tool returned an error or not
 	// because it may contain useful information
 	fmt.Println()
-	fmt.Println(result.TextContent)
+	for _, text := range result.TextContent {
+		fmt.Println(text)
+	}
 
 	return nil
 }
