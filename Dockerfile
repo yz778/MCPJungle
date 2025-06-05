@@ -1,4 +1,4 @@
-FROM scratch
+FROM gcr.io/distroless/base
 
 # The build is handled by goreleaser
 # Copy the binary from the build stage
