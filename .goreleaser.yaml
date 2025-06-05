@@ -57,4 +57,28 @@ brews:
 
 dockers:
   - image_templates:
-      - duaraghav8/mcpjungle
+      - "duaraghav8/mcpjungle:{{ .Tag }}-amd64"
+      - "duaraghav8/mcpjungle:latest-amd64"
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+    goarch: amd64
+  - image_templates:
+      - "duaraghav8/mcpjungle:{{ .Tag }}-arm64"
+      - "duaraghav8/mcpjungle:latest-arm64"
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+    goarch: arm64
+
+docker_manifests:
+  - name_template: "duaraghav8/mcpjungle:{{ .Tag }}"
+    image_templates:
+      - "duaraghav8/mcpjungle:{{ .Tag }}-amd64"
+      - "duaraghav8/mcpjungle:{{ .Tag }}-arm64"
+  - name_template: "duaraghav8/mcpjungle:latest"
+    image_templates:
+      - "duaraghav8/mcpjungle:latest-amd64"
+      - "duaraghav8/mcpjungle:latest-arm64"
