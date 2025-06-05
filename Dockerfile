@@ -1,4 +1,4 @@
-FROM debian:12-slim
+FROM gcr.io/distroless/base
 
 # The build is handled by goreleaser
 # Copy the binary from the build stage
