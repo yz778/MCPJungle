@@ -109,14 +109,20 @@ func (m *MCPService) InvokeTool(ctx context.Context, name string, args map[strin
 	// completely available in Content[0].
 
 	// Convert the Content field from []mcp.Content to []map[string]any to pass downstream.
+	// We don't attempt to cast the data into specific types because this method should simply
+	// forward the tool's response to the client.
+	// It is up to the client of this API to convert the data into specific types like
+	// Text, Image, etc.
 	contentList := make([]map[string]any, 0, len(callToolResp.Content))
 	for _, item := range callToolResp.Content {
-		data, err := json.Marshal(item)
+		var m map[string]any
+		serialized, err := json.Marshal(item)
 		if err != nil {
+			// TODO
 			continue
 		}
-		var m map[string]any
-		if err := json.Unmarshal(data, &m); err != nil {
+		if err = json.Unmarshal(serialized, &m); err != nil {
+			// TODO
 			continue
 		}
 		contentList = append(contentList, m)
