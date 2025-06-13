@@ -3,7 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/duaraghav8/mcpjungle/internal/model"
 	"github.com/mark3labs/mcp-go/client"
+	"github.com/mark3labs/mcp-go/client/transport"
 	"github.com/mark3labs/mcp-go/mcp"
 	"regexp"
 	"strings"
@@ -43,8 +45,17 @@ func splitServerToolName(name string) (string, string, bool) {
 }
 
 // createMcpServerConn creates a new MCP server connection and returns the client.
-func createMcpServerConn(ctx context.Context, url string) (*client.Client, error) {
-	c, err := client.NewStreamableHttpClient(url)
+func createMcpServerConn(ctx context.Context, s *model.McpServer) (*client.Client, error) {
+	var opts []transport.StreamableHTTPCOption
+	if s.BearerToken != "" {
+		// If bearer token is provided, set the Authorization header
+		o := transport.WithHTTPHeaders(map[string]string{
+			"Authorization": "Bearer " + s.BearerToken,
+		})
+		opts = append(opts, o)
+	}
+
+	c, err := client.NewStreamableHttpClient(s.URL, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create streamable HTTP client for MCP server: %w", err)
 	}
@@ -52,7 +63,7 @@ func createMcpServerConn(ctx context.Context, url string) (*client.Client, error
 	initRequest := mcp.InitializeRequest{}
 	initRequest.Params.ProtocolVersion = mcp.LATEST_PROTOCOL_VERSION
 	initRequest.Params.ClientInfo = mcp.Implementation{
-		Name:    "mcpjungle mcp client for " + url,
+		Name:    "mcpjungle mcp client for " + s.URL,
 		Version: "0.1",
 	}
 	initRequest.Params.Capabilities = mcp.ClientCapabilities{}

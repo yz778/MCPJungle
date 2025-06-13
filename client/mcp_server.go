@@ -15,15 +15,23 @@ type Server struct {
 	URL         string `json:"url"`
 }
 
-// RegisterServer registers a new MCP server with the registry.
-func (c *Client) RegisterServer(name, url, description string) (*Server, error) {
-	u, _ := c.constructAPIEndpoint("/servers")
-	server := &Server{
-		Name:        name,
-		Description: description,
-		URL:         url,
-	}
+// RegisterServerInput is the input structure for registering a new MCP server.
+type RegisterServerInput struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
 
+	// URL is mandatory and must be a valid http/https URL (eg- https://example.com/mcp).
+	// MCPJungle only supports streamable HTTP transport as of now.
+	URL string `json:"url"`
+
+	// BearerToken is an optional token used for authenticating requests to the MCP server.
+	// It is useful when the upstream MCP server requires static tokens (e.g., API tokens) for authentication.
+	BearerToken string `json:"bearer_token,omitempty"`
+}
+
+// RegisterServer registers a new MCP server with the registry.
+func (c *Client) RegisterServer(server *RegisterServerInput) (*Server, error) {
+	u, _ := c.constructAPIEndpoint("/servers")
 	body, err := json.Marshal(server)
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize server data into JSON: %w", err)

@@ -86,7 +86,7 @@ func (m *MCPService) InvokeTool(ctx context.Context, name string, args map[strin
 		)
 	}
 
-	mcpClient, err := createMcpServerConn(ctx, serverModel.URL)
+	mcpClient, err := createMcpServerConn(ctx, serverModel)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"failed to create connection to MCP server %s: %w", serverName, err,
