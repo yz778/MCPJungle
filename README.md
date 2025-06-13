@@ -135,7 +135,7 @@ This is useful when using SaaS-provided MCP Servers like HuggingFace, Stripe, et
 You can supply your token while registering the MCP server:
 ```bash
 # If you specify the `--bearer-token` flag, MCPJungle will add the `Authorization: Bearer <token>` header to all requests made to this MCP server.
-$ mcpjungle register --name huggingface --description "HuggingFace MCP Server" --url https://hf.co/mcp --bearer-token <your-hf-api-token>
+$ mcpjungle register --name huggingface --description "HuggingFace MCP Server" --url https://huggingface.co/mcp --bearer-token <your-hf-api-token>
 ```
 
 Support for other auth methods like Oauth is coming soon!
