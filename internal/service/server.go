@@ -15,8 +15,10 @@ func (m *MCPService) RegisterMcpServer(ctx context.Context, s *model.McpServer) 
 		return err
 	}
 
+	// TODO: validate the URL to ensure it is a valid HTTP/HTTPS URL (streamable http compliant)
+
 	// test that the server is reachable and is MCP-compliant
-	c, err := createMcpServerConn(ctx, s.URL)
+	c, err := createMcpServerConn(ctx, s)
 	if err != nil {
 		return fmt.Errorf("failed to connect to MCP server %s: %w", s.Name, err)
 	}

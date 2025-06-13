@@ -127,6 +127,19 @@ $ mcpjungle deregister calculator
 
 After running this, the registry will stop tracking this server and its tools will no longer be available to use.
 
+### Authentication
+MCPJungle currently supports authentication if your MCP Server accepts static tokens for auth.
+
+This is useful when using SaaS-provided MCP Servers like HuggingFace, Stripe, etc. which require your API token for authentication.
+
+You can supply your token while registering the MCP server:
+```bash
+# If you specify the `--bearer-token` flag, MCPJungle will add the `Authorization: Bearer <token>` header to all requests made to this MCP server.
+$ mcpjungle register --name huggingface --description "HuggingFace MCP Server" --url https://hf.co/mcp --bearer-token <your-hf-api-token>
+```
+
+Support for other auth methods like Oauth is coming soon!
+
 ## Development
 
 This section contains notes for maintainers and contributors of MCPJungle.

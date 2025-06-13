@@ -2,13 +2,15 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/duaraghav8/mcpjungle/client"
 	"github.com/spf13/cobra"
 )
 
 var (
-	registerCmdServerName string
-	registerCmdServerURL  string
-	registerCmdServerDesc string
+	registerCmdServerName  string
+	registerCmdServerURL   string
+	registerCmdServerDesc  string
+	registerCmdBearerToken string
 )
 
 var registerMCPServerCmd = &cobra.Command{
@@ -37,6 +39,13 @@ func init() {
 		"",
 		"Server description",
 	)
+	registerMCPServerCmd.Flags().StringVar(
+		&registerCmdBearerToken,
+		"bearer-token",
+		"",
+		"If provided, MCPJungle will use this token to authenticate with the MCP server for all requests."+
+			" This is useful if the MCP server requires static tokens (eg- your API token) for authentication.",
+	)
 
 	// TODO: name should not be mandatory.
 	//  If not supplied, name should be read from MCP server metadata by the registry.
@@ -47,7 +56,13 @@ func init() {
 }
 
 func runRegisterMCPServer(cmd *cobra.Command, args []string) error {
-	s, err := apiClient.RegisterServer(registerCmdServerName, registerCmdServerURL, registerCmdServerDesc)
+	input := &client.RegisterServerInput{
+		Name:        registerCmdServerName,
+		URL:         registerCmdServerURL,
+		Description: registerCmdServerDesc,
+		BearerToken: registerCmdBearerToken,
+	}
+	s, err := apiClient.RegisterServer(input)
 	if err != nil {
 		return fmt.Errorf("failed to register server: %w", err)
 	}
