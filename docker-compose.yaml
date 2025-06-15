@@ -10,6 +10,11 @@ services:
       - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "PGPASSWORD=mcpjungle pg_isready -U mcpjungle"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -31,6 +36,7 @@ services:
       - "8080:8080"
     depends_on:
       - db
+    restart: always
 
 volumes:
   db_data:
