@@ -18,7 +18,7 @@ MCPJungle is a single source-of-truth registry for all [Model Context Protocol](
 ## Who should use MCPJungle?
 1. Devs using MCP Clients like Claude, Cursor, & Windsurf that need to connect to **multiple** MCP servers for calling tools.
 2. Devs building AI Agents that need to access **multiple** MCP servers for calling tools.
-3. People who want to view and manage all their MCP servers from one centralized place. Secure & Private 🔒
+3. Organisations who want to view and manage all their MCP servers from one centralized place. Secure & Private 🔒
 
 ## Installation
 
@@ -26,7 +26,7 @@ MCPJungle is a single source-of-truth registry for all [Model Context Protocol](
 > MCPJungle is **BETA** software.
 >
 > We're actively working to make it production-ready.
-> You can provide your feedback by [creating an Issue](https://github.com/duaraghav8/MCPJungle/issues) in this repository.
+> You can provide your feedback by [starting a discussion](https://github.com/duaraghav8/MCPJungle/discussions) in this repository.
 
 MPCJungle is shipped as a stand-alone binary.
 
@@ -43,7 +43,7 @@ $ mcpjungle version
 ```
 
 > [!IMPORTANT]
-> On MacOS, you will have to use homebrew because the compiled binary is not [Notarized](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution).
+> On MacOS, you will have to use homebrew because the compiled binary is not [Notarized](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution) yet.
 
 
 ## Usage
@@ -153,7 +153,7 @@ You can supply your token while registering the MCP server:
 $ mcpjungle register --name huggingface --description "HuggingFace MCP Server" --url https://huggingface.co/mcp --bearer-token <your-hf-api-token>
 ```
 
-Support for other auth methods like Oauth is coming soon!
+Support for Oauth flow is coming soon!
 
 ## Development
 
