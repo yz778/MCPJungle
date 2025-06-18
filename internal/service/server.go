@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/duaraghav8/mcpjungle/internal/model"
+	"github.com/mcpjungle/mcpjungle/internal/model"
 )
 
 // RegisterMcpServer registers a new MCP server in the database.

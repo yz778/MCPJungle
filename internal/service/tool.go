@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/duaraghav8/mcpjungle/internal/model"
-	"github.com/duaraghav8/mcpjungle/internal/types"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mcpjungle/mcpjungle/internal/model"
+	"github.com/mcpjungle/mcpjungle/internal/types"
 )
 
 // ListTools returns all tools registered in the registry.

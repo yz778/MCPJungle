@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/duaraghav8/mcpjungle/client"
+	"github.com/mcpjungle/mcpjungle/client"
 	"github.com/spf13/cobra"
 )
 

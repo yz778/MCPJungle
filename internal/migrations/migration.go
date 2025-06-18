@@ -2,7 +2,7 @@ package migrations
 
 import (
 	"fmt"
-	"github.com/duaraghav8/mcpjungle/internal/model"
+	"github.com/mcpjungle/mcpjungle/internal/model"
 	"gorm.io/gorm"
 )
 

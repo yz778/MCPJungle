@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"github.com/duaraghav8/mcpjungle/cmd"
+	"github.com/mcpjungle/mcpjungle/cmd"
 	"os"
 )
 

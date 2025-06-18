@@ -1,4 +1,4 @@
-module github.com/duaraghav8/mcpjungle
+module github.com/mcpjungle/mcpjungle
 
 go 1.24.3
 

@@ -1,9 +1,9 @@
 package api
 
 import (
-	"github.com/duaraghav8/mcpjungle/internal/model"
-	"github.com/duaraghav8/mcpjungle/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/mcpjungle/mcpjungle/internal/model"
+	"github.com/mcpjungle/mcpjungle/internal/service"
 	"net/http"
 )
 

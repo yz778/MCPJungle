@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/duaraghav8/mcpjungle/internal/api"
+	"github.com/mcpjungle/mcpjungle/internal/api"
 	"net/http"
 	"net/url"
 )

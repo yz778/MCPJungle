@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/duaraghav8/mcpjungle/internal/api"
-	"github.com/duaraghav8/mcpjungle/internal/db"
-	"github.com/duaraghav8/mcpjungle/internal/migrations"
-	"github.com/duaraghav8/mcpjungle/internal/service"
 	"github.com/joho/godotenv"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/mcpjungle/mcpjungle/internal/api"
+	"github.com/mcpjungle/mcpjungle/internal/db"
+	"github.com/mcpjungle/mcpjungle/internal/migrations"
+	"github.com/mcpjungle/mcpjungle/internal/service"
 	"github.com/spf13/cobra"
 	"os"
 )

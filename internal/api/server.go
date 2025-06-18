@@ -2,9 +2,9 @@ package api
 
 import (
 	"fmt"
-	"github.com/duaraghav8/mcpjungle/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/mark3labs/mcp-go/server"
+	"github.com/mcpjungle/mcpjungle/internal/service"
 )
 
 const V0PathPrefix = "/api/v0"

@@ -2,11 +2,11 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/duaraghav8/mcpjungle/internal/model"
+	"github.com/mcpjungle/mcpjungle/internal/model"
 	"net/http"
 
-	"github.com/duaraghav8/mcpjungle/internal/service"
 	"github.com/gin-gonic/gin"
+	"github.com/mcpjungle/mcpjungle/internal/service"
 )
 
 func listToolsHandler(mcpService *service.MCPService) gin.HandlerFunc {
