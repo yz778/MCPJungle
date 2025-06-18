@@ -33,7 +33,7 @@ MPCJungle is shipped as a stand-alone binary.
 You can either download it from the [Releases](https://github.com/mcpjungle/MCPJungle/releases) Page or use [Homebrew](https://brew.sh/) to install it:
 
 ```bash
-$ brew install duaraghav8/mcpjungle/mcpjungle
+$ brew install mcpjungle/mcpjungle/mcpjungle
 ```
 
 Verify your installation by running
