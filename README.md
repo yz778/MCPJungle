@@ -26,11 +26,11 @@ MCPJungle is a single source-of-truth registry for all [Model Context Protocol](
 > MCPJungle is **BETA** software.
 >
 > We're actively working to make it production-ready.
-> You can provide your feedback by [starting a discussion](https://github.com/duaraghav8/MCPJungle/discussions) in this repository.
+> You can provide your feedback by [starting a discussion](https://github.com/mcpjungle/MCPJungle/discussions) in this repository.
 
 MPCJungle is shipped as a stand-alone binary.
 
-You can either download it from the [Releases](https://github.com/duaraghav8/MCPJungle/releases) Page or use [Homebrew](https://brew.sh/) to install it:
+You can either download it from the [Releases](https://github.com/mcpjungle/MCPJungle/releases) Page or use [Homebrew](https://brew.sh/) to install it:
 
 ```bash
 $ brew install duaraghav8/mcpjungle/mcpjungle
@@ -53,7 +53,7 @@ MCPJungle has a Client-Server architecture and the binary lets you run both a Se
 ### Server
 For running the MCPJungle server locally, docker compose is the recommended way:
 ```shell
-curl -O https://raw.githubusercontent.com/duaraghav8/MCPJungle/refs/heads/main/docker-compose.yaml
+curl -O https://raw.githubusercontent.com/mcpjungle/MCPJungle/refs/heads/main/docker-compose.yaml
 docker-compose up -d
 ```
 

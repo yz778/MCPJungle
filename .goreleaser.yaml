@@ -20,7 +20,7 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -s -w -X github.com/duaraghav8/mcpjungle/cmd.Version={{.Version}}
+      - -s -w -X github.com/mcpjungle/mcpjungle/cmd.Version={{.Version}}
 
 archives:
   - formats: [tar.gz]
@@ -46,27 +46,27 @@ changelog:
   disable: true
 
 brews:
-  - url_template: "https://github.com/duaraghav8/MCPJungle/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+  - url_template: "https://github.com/mcpjungle/MCPJungle/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     commit_author:
       name: "Raghav Dua"
-    homepage: "https://github.com/duaraghav8/MCPJungle"
-    description: "Self-hosted MCP tool registry for private AI agents"
+    homepage: "https://github.com/mcpjungle/MCPJungle"
+    description: "Self-hosted MCP tool registry for enterprise AI agents"
     repository:
-      owner: "duaraghav8"
+      owner: "mcpjungle"
       name: "homebrew-mcpjungle"
 
 dockers:
   - image_templates:
-      - "duaraghav8/mcpjungle:{{ .Tag }}-amd64"
-      - "duaraghav8/mcpjungle:latest-amd64"
+      - "mcpjungle/mcpjungle:{{ .Tag }}-amd64"
+      - "mcpjungle/mcpjungle:latest-amd64"
     use: buildx
     build_flag_templates:
       - "--pull"
       - "--platform=linux/amd64"
     goarch: amd64
   - image_templates:
-      - "duaraghav8/mcpjungle:{{ .Tag }}-arm64"
-      - "duaraghav8/mcpjungle:latest-arm64"
+      - "mcpjungle/mcpjungle:{{ .Tag }}-arm64"
+      - "mcpjungle/mcpjungle:latest-arm64"
     use: buildx
     build_flag_templates:
       - "--pull"
@@ -74,11 +74,11 @@ dockers:
     goarch: arm64
 
 docker_manifests:
-  - name_template: "duaraghav8/mcpjungle:{{ .Tag }}"
+  - name_template: "mcpjungle/mcpjungle:{{ .Tag }}"
     image_templates:
-      - "duaraghav8/mcpjungle:{{ .Tag }}-amd64"
-      - "duaraghav8/mcpjungle:{{ .Tag }}-arm64"
-  - name_template: "duaraghav8/mcpjungle:latest"
+      - "mcpjungle/mcpjungle:{{ .Tag }}-amd64"
+      - "mcpjungle/mcpjungle:{{ .Tag }}-arm64"
+  - name_template: "mcpjungle/mcpjungle:latest"
     image_templates:
-      - "duaraghav8/mcpjungle:latest-amd64"
-      - "duaraghav8/mcpjungle:latest-arm64"
+      - "mcpjungle/mcpjungle:latest-amd64"
+      - "mcpjungle/mcpjungle:latest-arm64"
