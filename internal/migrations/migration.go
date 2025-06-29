@@ -14,5 +14,8 @@ func Migrate(db *gorm.DB) error {
 	if err := db.AutoMigrate(&model.Tool{}); err != nil {
 		return fmt.Errorf("auto‑migration failed for Tool model: %v", err)
 	}
+	if err := db.AutoMigrate(&model.ServerConfig{}); err != nil {
+		return fmt.Errorf("auto‑migration failed for ServerConfig model: %v", err)
+	}
 	return nil
 }

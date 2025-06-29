@@ -17,7 +17,10 @@ const (
 	BindPortDefault = "8080"
 )
 
-var startServerCmdBindPort string
+var (
+	startServerCmdBindPort    string
+	startServerCmdProdEnabled bool
+)
 
 var startServerCmd = &cobra.Command{
 	Use:   "start",
@@ -32,6 +35,13 @@ func init() {
 		"",
 		fmt.Sprintf("port to bind the server to (overrides env var %s)", BindPortEnvVar),
 	)
+	startServerCmd.Flags().BoolVar(
+		&startServerCmdProdEnabled,
+		"prod",
+		false,
+		fmt.Sprintf("Run server in production mode (for enterprises)"),
+	)
+
 	rootCmd.AddCommand(startServerCmd)
 }
 
@@ -44,6 +54,9 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
+	// Migrations should ideally be decoupled from both the server and the startup phase
+	// (should be run as a separate command).
+	// However, for the user's convenience, we run them as part of startup command for now.
 	if err := migrations.Migrate(dbConn); err != nil {
 		return fmt.Errorf("failed to run migrations: %v", err)
 	}
