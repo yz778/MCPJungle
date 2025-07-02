@@ -7,7 +7,9 @@ import (
 	"github.com/mcpjungle/mcpjungle/internal/api"
 	"github.com/mcpjungle/mcpjungle/internal/db"
 	"github.com/mcpjungle/mcpjungle/internal/migrations"
+	"github.com/mcpjungle/mcpjungle/internal/model"
 	"github.com/mcpjungle/mcpjungle/internal/service"
+	"github.com/mcpjungle/mcpjungle/internal/service/config"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -82,10 +84,24 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create MCP service: %v", err)
 	}
 
+	configService := config.NewServerConfigService(dbConn)
+
 	// create the API server
-	s, err := api.NewServer(port, mcpProxyServer, mcpService)
+	s, err := api.NewServer(port, mcpProxyServer, mcpService, configService)
 	if err != nil {
 		return fmt.Errorf("failed to create server: %v", err)
+	}
+
+	// Silently initialize the server if the mode is dev.
+	// Individual (dev mode) users need not worry about server initialization.
+	if !startServerCmdProdEnabled {
+		if err := s.Init(model.ModeDev); err != nil {
+			return fmt.Errorf("failed to initialize server in development mode: %v", err)
+		}
+	} else {
+		fmt.Println(
+			"Starting server in production mode, don't forget to initialize it by running `init-server`",
+		)
 	}
 
 	fmt.Printf("MCPJungle server listening on :%s", port)

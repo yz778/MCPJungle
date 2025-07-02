@@ -8,7 +8,11 @@ import (
 type ServerMode string
 
 const (
-	ModeDev  ServerMode = "development"
+	// ModeDev is ideal for individual developers running the server locally for
+	// their personal MCP clients like Claude, Cursor, etc. and small use cases.
+	ModeDev ServerMode = "development"
+
+	// ModeProd is ideal for production (enterprise) deployments
 	ModeProd ServerMode = "production"
 )
 
