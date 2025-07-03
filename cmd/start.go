@@ -8,8 +8,8 @@ import (
 	"github.com/mcpjungle/mcpjungle/internal/db"
 	"github.com/mcpjungle/mcpjungle/internal/migrations"
 	"github.com/mcpjungle/mcpjungle/internal/model"
-	"github.com/mcpjungle/mcpjungle/internal/service"
 	"github.com/mcpjungle/mcpjungle/internal/service/config"
+	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -79,7 +79,7 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		server.WithToolCapabilities(true),
 	)
 
-	mcpService, err := service.NewMCPService(dbConn, mcpProxyServer)
+	mcpService, err := mcp.NewMCPService(dbConn, mcpProxyServer)
 	if err != nil {
 		return fmt.Errorf("failed to create MCP service: %v", err)
 	}

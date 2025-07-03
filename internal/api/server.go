@@ -5,8 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/mcpjungle/mcpjungle/internal/model"
-	"github.com/mcpjungle/mcpjungle/internal/service"
 	"github.com/mcpjungle/mcpjungle/internal/service/config"
+	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
 )
 
 const V0PathPrefix = "/api/v0"
@@ -17,13 +17,13 @@ type Server struct {
 	router *gin.Engine
 
 	mcpProxyServer *server.MCPServer
-	mcpService     *service.MCPService
+	mcpService     *mcp.MCPService
 
 	configService *config.ServerConfigService
 }
 
 // NewServer initializes a new Gin server for MCPJungle registry and MCP proxy
-func NewServer(port string, mcpProxyServer *server.MCPServer, mcpService *service.MCPService, configService *config.ServerConfigService) (*Server, error) {
+func NewServer(port string, mcpProxyServer *server.MCPServer, mcpService *mcp.MCPService, configService *config.ServerConfigService) (*Server, error) {
 	r, err := newRouter(mcpProxyServer, mcpService, configService)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (s *Server) Start() error {
 }
 
 // newRouter sets up the Gin router with the MCP proxy server and API endpoints.
-func newRouter(mcpProxyServer *server.MCPServer, mcpService *service.MCPService, configService *config.ServerConfigService) (*gin.Engine, error) {
+func newRouter(mcpProxyServer *server.MCPServer, mcpService *mcp.MCPService, configService *config.ServerConfigService) (*gin.Engine, error) {
 	r := gin.Default()
 
 	r.GET(

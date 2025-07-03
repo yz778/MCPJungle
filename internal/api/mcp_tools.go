@@ -6,10 +6,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/mcpjungle/mcpjungle/internal/service"
+	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
 )
 
-func listToolsHandler(mcpService *service.MCPService) gin.HandlerFunc {
+func listToolsHandler(mcpService *mcp.MCPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		server := c.Query("server")
 		var (
@@ -32,7 +32,7 @@ func listToolsHandler(mcpService *service.MCPService) gin.HandlerFunc {
 }
 
 // invokeToolHandler forwards the JSON body to the tool URL and streams response back.
-func invokeToolHandler(mcpService *service.MCPService) gin.HandlerFunc {
+func invokeToolHandler(mcpService *mcp.MCPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var args map[string]any
 		if err := json.NewDecoder(c.Request.Body).Decode(&args); err != nil {
@@ -68,7 +68,7 @@ func invokeToolHandler(mcpService *service.MCPService) gin.HandlerFunc {
 }
 
 // getToolHandler returns the tool with the given name.
-func getToolHandler(mcpService *service.MCPService) gin.HandlerFunc {
+func getToolHandler(mcpService *mcp.MCPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// tool name has to be supplied as a query param because it contains slash.
 		// cannot be supplied as a path param.
