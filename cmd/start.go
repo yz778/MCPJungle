@@ -87,7 +87,13 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 	configService := config.NewServerConfigService(dbConn)
 
 	// create the API server
-	s, err := api.NewServer(port, mcpProxyServer, mcpService, configService)
+	opts := &api.ServerOptions{
+		Port:           port,
+		MCPProxyServer: mcpProxyServer,
+		MCPService:     mcpService,
+		ConfigService:  configService,
+	}
+	s, err := api.NewServer(opts)
 	if err != nil {
 		return fmt.Errorf("failed to create server: %v", err)
 	}

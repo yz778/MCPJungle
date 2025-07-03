@@ -11,6 +11,15 @@ import (
 
 const V0PathPrefix = "/api/v0"
 
+type ServerOptions struct {
+	// Port is the HTTP ports to bind the server to
+	Port string
+
+	MCPProxyServer *server.MCPServer
+	MCPService     *mcp.MCPService
+	ConfigService  *config.ServerConfigService
+}
+
 // Server represents the MCPJungle registry server that handles MCP proxy and API requests
 type Server struct {
 	port   string
@@ -23,21 +32,22 @@ type Server struct {
 }
 
 // NewServer initializes a new Gin server for MCPJungle registry and MCP proxy
-func NewServer(port string, mcpProxyServer *server.MCPServer, mcpService *mcp.MCPService, configService *config.ServerConfigService) (*Server, error) {
-	r, err := newRouter(mcpProxyServer, mcpService, configService)
+func NewServer(opts *ServerOptions) (*Server, error) {
+	r, err := newRouter(opts)
 	if err != nil {
 		return nil, err
 	}
 	s := &Server{
-		port:           port,
+		port:           opts.Port,
 		router:         r,
-		mcpProxyServer: mcpProxyServer,
-		mcpService:     mcpService,
-		configService:  configService,
+		mcpProxyServer: opts.MCPProxyServer,
+		mcpService:     opts.MCPService,
+		configService:  opts.ConfigService,
 	}
 	return s, nil
 }
 
+// IsInitialized returns true if the server is initialized
 func (s *Server) IsInitialized() (bool, error) {
 	c, err := s.configService.GetConfig()
 	if err != nil {
@@ -46,6 +56,7 @@ func (s *Server) IsInitialized() (bool, error) {
 	return c.Initialized, nil
 }
 
+// GetMode returns the server mode if the server is initialized, otherwise an error
 func (s *Server) GetMode() (model.ServerMode, error) {
 	ok, err := s.IsInitialized()
 	if err != nil {
@@ -61,6 +72,7 @@ func (s *Server) GetMode() (model.ServerMode, error) {
 	return c.Mode, nil
 }
 
+// Init initializes the server configuration in the specified mode
 func (s *Server) Init(mode model.ServerMode) error {
 	if err := s.configService.Init(mode); err != nil {
 		return fmt.Errorf("failed to initialize server config in %s mode: %w", mode, err)
@@ -77,7 +89,7 @@ func (s *Server) Start() error {
 }
 
 // newRouter sets up the Gin router with the MCP proxy server and API endpoints.
-func newRouter(mcpProxyServer *server.MCPServer, mcpService *mcp.MCPService, configService *config.ServerConfigService) (*gin.Engine, error) {
+func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 	r := gin.Default()
 
 	r.GET(
@@ -87,21 +99,21 @@ func newRouter(mcpProxyServer *server.MCPServer, mcpService *mcp.MCPService, con
 		},
 	)
 
-	r.POST("/init", registerInitServerHandler(configService))
+	r.POST("/init", registerInitServerHandler(opts.ConfigService))
 
 	// Set up the MCP proxy server on /mcp
-	streamableHttpServer := server.NewStreamableHTTPServer(mcpProxyServer)
+	streamableHttpServer := server.NewStreamableHTTPServer(opts.MCPProxyServer)
 	r.Any("/mcp", gin.WrapH(streamableHttpServer))
 
 	// Setup API endpoints
 	apiV0 := r.Group(V0PathPrefix)
 	{
-		apiV0.POST("/servers", registerServerHandler(mcpService))
-		apiV0.DELETE("/servers/:name", deregisterServerHandler(mcpService))
-		apiV0.GET("/servers", listServersHandler(mcpService))
-		apiV0.GET("/tools", listToolsHandler(mcpService))
-		apiV0.POST("/tools/invoke", invokeToolHandler(mcpService))
-		apiV0.GET("/tool", getToolHandler(mcpService))
+		apiV0.POST("/servers", registerServerHandler(opts.MCPService))
+		apiV0.DELETE("/servers/:name", deregisterServerHandler(opts.MCPService))
+		apiV0.GET("/servers", listServersHandler(opts.MCPService))
+		apiV0.GET("/tools", listToolsHandler(opts.MCPService))
+		apiV0.POST("/tools/invoke", invokeToolHandler(opts.MCPService))
+		apiV0.GET("/tool", getToolHandler(opts.MCPService))
 	}
 
 	return r, nil

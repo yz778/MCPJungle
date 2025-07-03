@@ -7,6 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// ServerConfigService provides methods to manage server configuration in the database.
 type ServerConfigService struct {
 	db *gorm.DB
 }
@@ -15,6 +16,8 @@ func NewServerConfigService(db *gorm.DB) *ServerConfigService {
 	return &ServerConfigService{db: db}
 }
 
+// GetConfig retrieves the server configuration from the database.
+// If no configuration exists, it returns a default uninitialized config.
 func (s *ServerConfigService) GetConfig() (model.ServerConfig, error) {
 	var config model.ServerConfig
 	err := s.db.First(&config).Error
