@@ -15,21 +15,31 @@ func NewServerConfigService(db *gorm.DB) *ServerConfigService {
 	return &ServerConfigService{db: db}
 }
 
-func (s *ServerConfigService) Init(mode model.ServerMode) error {
+func (s *ServerConfigService) GetConfig() (model.ServerConfig, error) {
 	var config model.ServerConfig
 	err := s.db.First(&config).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		// No config exists, create one
-		config = model.ServerConfig{
-			Mode:        mode,
-			Initialized: true,
-		}
-		return s.db.Create(&config).Error
+		return model.ServerConfig{Initialized: false}, nil
 	}
-	// If any other error, return it
 	if err != nil {
-		return fmt.Errorf("failed to fetch server configuration from db: %v", err)
+		return model.ServerConfig{}, fmt.Errorf("failed to fetch server configuration from db: %v", err)
 	}
-	// Config already exists, do nothing
-	return nil
+	return config, nil
+}
+
+func (s *ServerConfigService) Init(mode model.ServerMode) error {
+	config, err := s.GetConfig()
+	if err != nil {
+		return err
+	}
+	if config.Initialized {
+		// Config already exists, do nothing
+		return nil
+	}
+	// No config exists, create one
+	config = model.ServerConfig{
+		Mode:        mode,
+		Initialized: true,
+	}
+	return s.db.Create(&config).Error
 }

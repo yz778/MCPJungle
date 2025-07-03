@@ -92,19 +92,45 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create server: %v", err)
 	}
 
-	// Silently initialize the server if the mode is dev.
-	// Individual (dev mode) users need not worry about server initialization.
-	if !startServerCmdProdEnabled {
-		if err := s.Init(model.ModeDev); err != nil {
-			return fmt.Errorf("failed to initialize server in development mode: %v", err)
-		}
-	} else {
-		fmt.Println(
-			"Starting server in production mode, don't forget to initialize it by running `init-server`",
-		)
+	desiredMode := model.ModeDev
+	if startServerCmdProdEnabled {
+		desiredMode = model.ModeProd
 	}
 
-	fmt.Printf("MCPJungle server listening on :%s", port)
+	ok, err := s.IsInitialized()
+	if err != nil {
+		return fmt.Errorf("failed to check if server is initialized: %v", err)
+	}
+	if ok {
+		// If the server is already initialized, then the mode supplied to this command (desired mode)
+		// must match the configured mode.
+		mode, err := s.GetMode()
+		if err != nil {
+			return fmt.Errorf("failed to get server mode: %v", err)
+		}
+		if desiredMode != mode {
+			return fmt.Errorf(
+				"server is already initialized in %s mode, cannot start in %s mode",
+				mode, desiredMode,
+			)
+		}
+	} else {
+		// If server isn't already initialized and the desired mode is dev, silently initialize the server.
+		// Individual (dev mode) users need not worry about server initialization.
+		if desiredMode == model.ModeDev {
+			if err := s.Init(desiredMode); err != nil {
+				return fmt.Errorf("failed to initialize server in development mode: %v", err)
+			}
+		} else {
+			// If desired mode is prod, then server initialization is a manual next step to be taken by the user.
+			// This is so that they can obtain the admin access token on their client machine.
+			fmt.Println(
+				"Starting server in Production mode, don't forget to initialize it by running `init-server`",
+			)
+		}
+	}
+
+	fmt.Printf("MCPJungle HTTP server listening on :%s", port)
 	if err := s.Start(); err != nil {
 		return fmt.Errorf("failed to run the server: %v", err)
 	}

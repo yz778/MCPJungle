@@ -38,6 +38,29 @@ func NewServer(port string, mcpProxyServer *server.MCPServer, mcpService *mcp.MC
 	return s, nil
 }
 
+func (s *Server) IsInitialized() (bool, error) {
+	c, err := s.configService.GetConfig()
+	if err != nil {
+		return false, fmt.Errorf("failed to get server config: %w", err)
+	}
+	return c.Initialized, nil
+}
+
+func (s *Server) GetMode() (model.ServerMode, error) {
+	ok, err := s.IsInitialized()
+	if err != nil {
+		return "", fmt.Errorf("failed to check if server is initialized: %w", err)
+	}
+	if !ok {
+		return "", fmt.Errorf("server is not initialized")
+	}
+	c, err := s.configService.GetConfig()
+	if err != nil {
+		return "", fmt.Errorf("failed to get server config: %w", err)
+	}
+	return c.Mode, nil
+}
+
 func (s *Server) Init(mode model.ServerMode) error {
 	if err := s.configService.Init(mode); err != nil {
 		return fmt.Errorf("failed to initialize server config in %s mode: %w", mode, err)

@@ -23,7 +23,7 @@ type ServerConfig struct {
 	Mode ServerMode `gorm:"type:varchar(12);not null"`
 
 	// Initialized indicates whether the server has been initialized.
-	// If this is set to false, the server is not yet ready for use and all requests to it will be rejected.
+	// If this is set to false, the server is not yet ready for use and all requests to it should be rejected.
 	Initialized bool `gorm:"not null;default:false"`
 }
 
