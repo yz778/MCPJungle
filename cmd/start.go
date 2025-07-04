@@ -136,9 +136,9 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Printf("MCPJungle HTTP server listening on :%s", port)
+	fmt.Printf("MCPJungle HTTP server listening on :%s\n\n", port)
 	if err := s.Start(); err != nil {
-		return fmt.Errorf("failed to run the server: %v", err)
+		return fmt.Errorf("failed to run the server: %v\n", err)
 	}
 
 	return nil

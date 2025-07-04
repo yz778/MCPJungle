@@ -103,6 +103,7 @@ func requireInitialized(configService *config.ServerConfigService) gin.HandlerFu
 
 // newRouter sets up the Gin router with the MCP proxy server and API endpoints.
 func newRouter(opts *ServerOptions) (*gin.Engine, error) {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
 
 	r.GET(
