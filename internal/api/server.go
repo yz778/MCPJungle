@@ -7,6 +7,7 @@ import (
 	"github.com/mcpjungle/mcpjungle/internal/model"
 	"github.com/mcpjungle/mcpjungle/internal/service/config"
 	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
+	"net/http"
 )
 
 const V0PathPrefix = "/api/v0"
@@ -88,6 +89,18 @@ func (s *Server) Start() error {
 	return nil
 }
 
+// requireInitialized is middleware to reject requests to certain routes if the server is not initialized
+func requireInitialized(configService *config.ServerConfigService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cfg, err := configService.GetConfig()
+		if err != nil || !cfg.Initialized {
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "server not initialized"})
+			return
+		}
+		c.Next()
+	}
+}
+
 // newRouter sets up the Gin router with the MCP proxy server and API endpoints.
 func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 	r := gin.Default()
@@ -101,12 +114,14 @@ func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 
 	r.POST("/init", registerInitServerHandler(opts.ConfigService))
 
+	requireInit := requireInitialized(opts.ConfigService)
+
 	// Set up the MCP proxy server on /mcp
 	streamableHttpServer := server.NewStreamableHTTPServer(opts.MCPProxyServer)
-	r.Any("/mcp", gin.WrapH(streamableHttpServer))
+	r.Any("/mcp", requireInit, gin.WrapH(streamableHttpServer))
 
 	// Setup API endpoints
-	apiV0 := r.Group(V0PathPrefix)
+	apiV0 := r.Group(V0PathPrefix, requireInit)
 	{
 		apiV0.POST("/servers", registerServerHandler(opts.MCPService))
 		apiV0.DELETE("/servers/:name", deregisterServerHandler(opts.MCPService))
