@@ -3,6 +3,7 @@ package user
 import (
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"github.com/mcpjungle/mcpjungle/internal/model"
 	"gorm.io/gorm"
@@ -30,6 +31,21 @@ func (u *UserService) CreateAdminUser() (*model.User, error) {
 	}
 	if err := u.db.Create(&user).Error; err != nil {
 		return nil, fmt.Errorf("failed to create admin user: %w", err)
+	}
+	return &user, nil
+}
+
+// VerifyAdminToken checks if the provided token belongs to an admin user
+func (u *UserService) VerifyAdminToken(token string) (*model.User, error) {
+	var user model.User
+	if err := u.db.Where("access_token = ?", token).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("admin user not found")
+		}
+		return nil, fmt.Errorf("failed to verify admin token: %w", err)
+	}
+	if user.Role != model.UserRoleAdmin {
+		return nil, fmt.Errorf("user is not an admin")
 	}
 	return &user, nil
 }

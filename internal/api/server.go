@@ -9,6 +9,7 @@ import (
 	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
 	"github.com/mcpjungle/mcpjungle/internal/service/user"
 	"net/http"
+	"strings"
 )
 
 const V0PathPrefix = "/api/v0"
@@ -107,6 +108,36 @@ func requireInitialized(configService *config.ServerConfigService) gin.HandlerFu
 	}
 }
 
+// requireAuthIfProd is middleware that checks for a valid admin token if the server is in production mode.
+// In development mode, it allows all requests without authentication.
+func checkAuthForAPIAccess(configService *config.ServerConfigService, userService *user.UserService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cfg, err := configService.GetConfig()
+		if err != nil {
+			c.AbortWithStatusJSON(
+				http.StatusServiceUnavailable, gin.H{"error": "failed to fetch server config while checking auth"},
+			)
+			return
+		}
+		if cfg.Mode == model.ModeDev {
+			c.Next()
+			return
+		}
+		authHeader := c.GetHeader("Authorization")
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		if token == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing access token"})
+			return
+		}
+		_, err = userService.VerifyAdminToken(token)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid access token"})
+			return
+		}
+		c.Next()
+	}
+}
+
 // newRouter sets up the Gin router with the MCP proxy server and API endpoints.
 func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 	gin.SetMode(gin.ReleaseMode)
@@ -122,13 +153,14 @@ func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 	r.POST("/init", registerInitServerHandler(opts.ConfigService, opts.UserService))
 
 	requireInit := requireInitialized(opts.ConfigService)
+	checkAuth := checkAuthForAPIAccess(opts.ConfigService, opts.UserService)
 
 	// Set up the MCP proxy server on /mcp
 	streamableHttpServer := server.NewStreamableHTTPServer(opts.MCPProxyServer)
 	r.Any("/mcp", requireInit, gin.WrapH(streamableHttpServer))
 
 	// Setup API endpoints
-	apiV0 := r.Group(V0PathPrefix, requireInit)
+	apiV0 := r.Group(V0PathPrefix, requireInit, checkAuth)
 	{
 		apiV0.POST("/servers", registerServerHandler(opts.MCPService))
 		apiV0.DELETE("/servers/:name", deregisterServerHandler(opts.MCPService))
