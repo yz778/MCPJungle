@@ -13,14 +13,14 @@ import (
 
 // Client represents a client for interacting with the MCPJungle HTTP API
 type Client struct {
-	BaseURL    string
-	HTTPClient *http.Client
+	baseURL    string
+	httpClient *http.Client
 }
 
 func NewClient(baseURL string, httpClient *http.Client) *Client {
 	return &Client{
-		BaseURL:    baseURL,
-		HTTPClient: httpClient,
+		baseURL:    baseURL,
+		httpClient: httpClient,
 	}
 }
 
@@ -30,7 +30,7 @@ type InitServerResponse struct {
 
 // InitServer sends a request to initialize the server in production mode
 func (c *Client) InitServer() (*InitServerResponse, error) {
-	u, _ := url.JoinPath(c.BaseURL, "/init")
+	u, _ := url.JoinPath(c.baseURL, "/init")
 
 	payload := struct {
 		Mode string `json:"mode"`
@@ -42,7 +42,7 @@ func (c *Client) InitServer() (*InitServerResponse, error) {
 		return nil, err
 	}
 
-	resp, err := c.HTTPClient.Post(u, "application/json", bytes.NewBuffer(body))
+	resp, err := c.httpClient.Post(u, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request to %s: %w", u, err)
 	}
@@ -62,5 +62,5 @@ func (c *Client) InitServer() (*InitServerResponse, error) {
 
 // constructAPIEndpoint constructs the full API endpoint URL where a request must be sent
 func (c *Client) constructAPIEndpoint(suffixPath string) (string, error) {
-	return url.JoinPath(c.BaseURL, api.V0PathPrefix, suffixPath)
+	return url.JoinPath(c.baseURL, api.V0PathPrefix, suffixPath)
 }

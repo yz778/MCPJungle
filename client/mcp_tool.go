@@ -38,7 +38,7 @@ func (c *Client) ListTools(server string) ([]*Tool, error) {
 		req.URL.RawQuery = q.Encode()
 	}
 
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request to %s: %w", req.URL.String(), err)
 	}
@@ -63,7 +63,7 @@ func (c *Client) GetTool(name string) (*Tool, error) {
 	q.Add("name", name)
 	req.URL.RawQuery = q.Encode()
 
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request to %s: %w", req.URL.String(), err)
 	}
@@ -95,7 +95,7 @@ func (c *Client) InvokeTool(name string, input map[string]any) (*ToolInvokeResul
 
 	body, _ := json.Marshal(payload)
 	u, _ := c.constructAPIEndpoint("/tools/invoke")
-	resp, err := c.HTTPClient.Post(u, "application/json", bytes.NewReader(body))
+	resp, err := c.httpClient.Post(u, "application/json", bytes.NewReader(body))
 	if err != nil {
 		return nil, fmt.Errorf("request to server failed: %w", err)
 	}
