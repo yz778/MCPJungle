@@ -7,6 +7,7 @@ import (
 	"github.com/mcpjungle/mcpjungle/internal/model"
 	"github.com/mcpjungle/mcpjungle/internal/service/config"
 	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
+	"github.com/mcpjungle/mcpjungle/internal/service/user"
 	"net/http"
 )
 
@@ -19,6 +20,7 @@ type ServerOptions struct {
 	MCPProxyServer *server.MCPServer
 	MCPService     *mcp.MCPService
 	ConfigService  *config.ServerConfigService
+	UserService    *user.UserService
 }
 
 // Server represents the MCPJungle registry server that handles MCP proxy and API requests
@@ -30,6 +32,7 @@ type Server struct {
 	mcpService     *mcp.MCPService
 
 	configService *config.ServerConfigService
+	userService   *user.UserService
 }
 
 // NewServer initializes a new Gin server for MCPJungle registry and MCP proxy
@@ -44,6 +47,7 @@ func NewServer(opts *ServerOptions) (*Server, error) {
 		mcpProxyServer: opts.MCPProxyServer,
 		mcpService:     opts.MCPService,
 		configService:  opts.ConfigService,
+		userService:    opts.UserService,
 	}
 	return s, nil
 }
@@ -73,10 +77,12 @@ func (s *Server) GetMode() (model.ServerMode, error) {
 	return c.Mode, nil
 }
 
-// Init initializes the server configuration in the specified mode
-func (s *Server) Init(mode model.ServerMode) error {
-	if err := s.configService.Init(mode); err != nil {
-		return fmt.Errorf("failed to initialize server config in %s mode: %w", mode, err)
+// InitDev initializes the server configuration in the Development mode.
+// This method does not create an admin user because that is irrelevant in dev mode.
+func (s *Server) InitDev() error {
+	_, err := s.configService.Init(model.ModeDev)
+	if err != nil {
+		return fmt.Errorf("failed to initialize server config in dev mode: %w", err)
 	}
 	return nil
 }
@@ -113,7 +119,7 @@ func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 		},
 	)
 
-	r.POST("/init", registerInitServerHandler(opts.ConfigService))
+	r.POST("/init", registerInitServerHandler(opts.ConfigService, opts.UserService))
 
 	requireInit := requireInitialized(opts.ConfigService)
 

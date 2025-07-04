@@ -10,6 +10,7 @@ import (
 	"github.com/mcpjungle/mcpjungle/internal/model"
 	"github.com/mcpjungle/mcpjungle/internal/service/config"
 	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
+	"github.com/mcpjungle/mcpjungle/internal/service/user"
 	"github.com/spf13/cobra"
 	"os"
 )
@@ -87,6 +88,7 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 	}
 
 	configService := config.NewServerConfigService(dbConn)
+	userService := user.NewUserService(dbConn)
 
 	// create the API server
 	opts := &api.ServerOptions{
@@ -94,6 +96,7 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		MCPProxyServer: mcpProxyServer,
 		MCPService:     mcpService,
 		ConfigService:  configService,
+		UserService:    userService,
 	}
 	s, err := api.NewServer(opts)
 	if err != nil {
@@ -126,7 +129,7 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		// If server isn't already initialized and the desired mode is dev, silently initialize the server.
 		// Individual (dev mode) users need not worry about server initialization.
 		if desiredMode == model.ModeDev {
-			if err := s.Init(desiredMode); err != nil {
+			if err := s.InitDev(); err != nil {
 				return fmt.Errorf("failed to initialize server in development mode: %v", err)
 			}
 		} else {

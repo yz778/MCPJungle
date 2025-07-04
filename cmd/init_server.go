@@ -19,10 +19,16 @@ func init() {
 
 func runInitServer(cmd *cobra.Command, args []string) error {
 	fmt.Println("Initializing the MCPJungle Server in Production Mode...")
-	err := apiClient.InitServer()
+	resp, err := apiClient.InitServer()
 	if err != nil {
 		return fmt.Errorf("failed to initialize the server: %w", err)
 	}
+
+	if resp.AdminAccessToken == "" {
+		return fmt.Errorf("server initialization failed: no admin access token received")
+	}
+	fmt.Println("Your Admin access token is:", resp.AdminAccessToken)
+
 	fmt.Println("Done!")
 	return nil
 }

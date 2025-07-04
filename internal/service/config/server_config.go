@@ -30,20 +30,22 @@ func (s *ServerConfigService) GetConfig() (model.ServerConfig, error) {
 	return config, nil
 }
 
-func (s *ServerConfigService) Init(mode model.ServerMode) error {
+// Init initializes the server configuration in the database.
+// It is an idempotent operation. It returns true if the config was created.
+// If the config already exists, it returns false and does nothing else.
+func (s *ServerConfigService) Init(mode model.ServerMode) (bool, error) {
 	config, err := s.GetConfig()
 	if err != nil {
-		return err
+		return false, err
 	}
 	if config.Initialized {
-		// TODO: Instead of NOOP, return a specific error indicating that the server is already initialized
 		// Config already exists, do nothing
-		return nil
+		return false, nil
 	}
 	// No config exists, create one
 	config = model.ServerConfig{
 		Mode:        mode,
 		Initialized: true,
 	}
-	return s.db.Create(&config).Error
+	return true, s.db.Create(&config).Error
 }
