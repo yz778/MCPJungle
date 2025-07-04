@@ -27,7 +27,9 @@ var (
 var startServerCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the MCP registry server",
-	RunE:  runStartServer,
+	Long: "Starts the MCPJungle HTTP registry server and the MCP Proxy server.\n" +
+		"The server is started in Development mode by default, which is ideal for individual users.\n",
+	RunE: runStartServer,
 }
 
 func init() {
@@ -41,7 +43,7 @@ func init() {
 		&startServerCmdProdEnabled,
 		"prod",
 		false,
-		fmt.Sprintf("Run server in production mode (for enterprises)"),
+		fmt.Sprintf("Run the server in Production mode (suitable for enterprises)"),
 	)
 
 	rootCmd.AddCommand(startServerCmd)

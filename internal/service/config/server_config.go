@@ -36,6 +36,7 @@ func (s *ServerConfigService) Init(mode model.ServerMode) error {
 		return err
 	}
 	if config.Initialized {
+		// TODO: Instead of NOOP, return a specific error indicating that the server is already initialized
 		// Config already exists, do nothing
 		return nil
 	}
