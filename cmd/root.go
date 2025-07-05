@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/mcpjungle/mcpjungle/client"
+	"github.com/mcpjungle/mcpjungle/cmd/config"
 	"github.com/spf13/cobra"
 	"net/http"
 )
@@ -47,9 +48,10 @@ func Execute() error {
 		"Base URL of the MCPJungle registry server",
 	)
 
-	// Initialize the API client with the registry server URL
+	// Initialize the API client with the registry server URL & client configuration (if any)
 	rootCmd.PersistentPreRun = func(cmd *cobra.Command, args []string) {
-		apiClient = client.NewClient(registryServerURL, http.DefaultClient)
+		cfg := config.Load()
+		apiClient = client.NewClient(registryServerURL, cfg.AccessToken, http.DefaultClient)
 	}
 
 	return rootCmd.Execute()

@@ -37,7 +37,13 @@ func (c *Client) RegisterServer(server *RegisterServerInput) (*Server, error) {
 		return nil, fmt.Errorf("failed to serialize server data into JSON: %w", err)
 	}
 
-	resp, err := c.httpClient.Post(u, "application/json", bytes.NewBuffer(body))
+	req, err := c.newRequest(http.MethodPost, u, bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request to %s: %w", u, err)
 	}
@@ -58,7 +64,12 @@ func (c *Client) RegisterServer(server *RegisterServerInput) (*Server, error) {
 // ListServers fetches the list of registered servers.
 func (c *Client) ListServers() ([]*Server, error) {
 	u, _ := c.constructAPIEndpoint("/servers")
-	resp, err := c.httpClient.Get(u)
+	req, err := c.newRequest(http.MethodGet, u, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request to %s: %w", u, err)
 	}
@@ -79,7 +90,7 @@ func (c *Client) ListServers() ([]*Server, error) {
 // DeregisterServer deletes a server by name.
 func (c *Client) DeregisterServer(name string) error {
 	u, _ := c.constructAPIEndpoint("/servers/" + name)
-	req, _ := http.NewRequest(http.MethodDelete, u, nil)
+	req, _ := c.newRequest(http.MethodDelete, u, nil)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
