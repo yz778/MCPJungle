@@ -101,7 +101,7 @@ func requireInitialized(configService *config.ServerConfigService) gin.HandlerFu
 	return func(c *gin.Context) {
 		cfg, err := configService.GetConfig()
 		if err != nil || !cfg.Initialized {
-			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"error": "server not initialized"})
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "server not initialized"})
 			return
 		}
 		c.Next()

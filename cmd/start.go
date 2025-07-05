@@ -136,7 +136,8 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 			// If desired mode is prod, then server initialization is a manual next step to be taken by the user.
 			// This is so that they can obtain the admin access token on their client machine.
 			fmt.Println(
-				"Starting server in Production mode, don't forget to initialize it by running `init-server`",
+				"Starting server in Production mode," +
+					" don't forget to initialize it by running the `init-server` command",
 			)
 		}
 	}
