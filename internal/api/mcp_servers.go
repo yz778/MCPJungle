@@ -3,11 +3,11 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/mcpjungle/mcpjungle/internal/model"
-	"github.com/mcpjungle/mcpjungle/internal/service"
+	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
 	"net/http"
 )
 
-func registerServerHandler(mcpService *service.MCPService) gin.HandlerFunc {
+func registerServerHandler(mcpService *mcp.MCPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var req model.McpServer
 		if err := c.ShouldBindJSON(&req); err != nil {
@@ -22,7 +22,7 @@ func registerServerHandler(mcpService *service.MCPService) gin.HandlerFunc {
 	}
 }
 
-func deregisterServerHandler(mcpService *service.MCPService) gin.HandlerFunc {
+func deregisterServerHandler(mcpService *mcp.MCPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		name := c.Param("name")
 		if err := mcpService.DeregisterMcpServer(name); err != nil {
@@ -33,7 +33,7 @@ func deregisterServerHandler(mcpService *service.MCPService) gin.HandlerFunc {
 	}
 }
 
-func listServersHandler(mcpService *service.MCPService) gin.HandlerFunc {
+func listServersHandler(mcpService *mcp.MCPService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		servers, err := mcpService.ListMcpServers()
 		if err != nil {

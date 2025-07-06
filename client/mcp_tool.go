@@ -31,14 +31,14 @@ type ToolInvokeResult struct {
 // ListTools fetches the list of tools, optionally filtered by server name.
 func (c *Client) ListTools(server string) ([]*Tool, error) {
 	u, _ := c.constructAPIEndpoint("/tools")
-	req, _ := http.NewRequest(http.MethodGet, u, nil)
+	req, _ := c.newRequest(http.MethodGet, u, nil)
 	if server != "" {
 		q := req.URL.Query()
 		q.Add("server", server)
 		req.URL.RawQuery = q.Encode()
 	}
 
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request to %s: %w", req.URL.String(), err)
 	}
@@ -58,12 +58,12 @@ func (c *Client) ListTools(server string) ([]*Tool, error) {
 // GetTool fetches a specific tool by its name.
 func (c *Client) GetTool(name string) (*Tool, error) {
 	u, _ := c.constructAPIEndpoint("/tool")
-	req, _ := http.NewRequest(http.MethodGet, u, nil)
+	req, _ := c.newRequest(http.MethodGet, u, nil)
 	q := req.URL.Query()
 	q.Add("name", name)
 	req.URL.RawQuery = q.Encode()
 
-	resp, err := c.HTTPClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to send request to %s: %w", req.URL.String(), err)
 	}
@@ -95,7 +95,13 @@ func (c *Client) InvokeTool(name string, input map[string]any) (*ToolInvokeResul
 
 	body, _ := json.Marshal(payload)
 	u, _ := c.constructAPIEndpoint("/tools/invoke")
-	resp, err := c.HTTPClient.Post(u, "application/json", bytes.NewReader(body))
+	req, err := c.newRequest(http.MethodPost, u, bytes.NewReader(body))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("request to server failed: %w", err)
 	}

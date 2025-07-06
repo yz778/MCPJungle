@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"gorm.io/gorm/logger"
 	"log"
 
 	"github.com/glebarez/sqlite"
@@ -23,7 +24,10 @@ func NewDBConnection(dsn string) (*gorm.DB, error) {
 		dialector = postgres.Open(dsn)
 	}
 
-	db, err := gorm.Open(dialector, &gorm.Config{})
+	c := &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Silent),
+	}
+	db, err := gorm.Open(dialector, c)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
