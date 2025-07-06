@@ -13,11 +13,16 @@ import (
 	"github.com/mcpjungle/mcpjungle/internal/service/user"
 	"github.com/spf13/cobra"
 	"os"
+	"strings"
 )
 
 const (
 	BindPortEnvVar  = "PORT"
 	BindPortDefault = "8080"
+
+	DBUrlEnvVar = "DATABASE_URL"
+
+	ServerModeEnvVar = "SERVER_MODE"
 )
 
 var (
@@ -44,7 +49,11 @@ func init() {
 		&startServerCmdProdEnabled,
 		"prod",
 		false,
-		fmt.Sprintf("Run the server in Production mode (suitable for enterprises)"),
+		fmt.Sprintf(
+			"Run the server in Production mode (suitable for enterprises)."+
+				" Alternatively, set the %s environment variable ('%s' | '%s')",
+			ServerModeEnvVar, model.ModeDev, model.ModeProd,
+		),
 	)
 
 	rootCmd.AddCommand(startServerCmd)
@@ -54,7 +63,7 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 	_ = godotenv.Load()
 
 	// connect to the DB and run migrations
-	dsn := os.Getenv("DATABASE_URL")
+	dsn := os.Getenv(DBUrlEnvVar)
 	dbConn, err := db.NewDBConnection(dsn)
 	if err != nil {
 		return err
@@ -103,11 +112,28 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create server: %v", err)
 	}
 
+	// determine the server mode
 	desiredMode := model.ModeDev
+	envMode := os.Getenv(ServerModeEnvVar)
+	if envMode != "" {
+		// the value of the environment variable is allowed to be case-insensitive
+		envMode = strings.ToLower(envMode)
+
+		if envMode != string(model.ModeDev) && envMode != string(model.ModeProd) {
+			return fmt.Errorf(
+				"invalid value for %s environment variable: '%s', valid values are '%s' and '%s'",
+				ServerModeEnvVar, envMode, model.ModeDev, model.ModeProd,
+			)
+		}
+
+		desiredMode = model.ServerMode(envMode)
+	}
 	if startServerCmdProdEnabled {
+		// If the --prod flag is set, it gets precedence over the environment variable
 		desiredMode = model.ModeProd
 	}
 
+	// determine server init status
 	ok, err := s.IsInitialized()
 	if err != nil {
 		return fmt.Errorf("failed to check if server is initialized: %v", err)
