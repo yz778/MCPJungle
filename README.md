@@ -155,6 +155,25 @@ $ mcpjungle register --name huggingface --description "HuggingFace MCP Server" -
 
 Support for Oauth flow is coming soon!
 
+### Enterprise Features
+
+If you're running MCPJungle in your organisation, we recommend running the Server in the `production` mode:
+```bash
+# enable enterprise features like authentication
+$ mcpjungle start --prod
+
+# server must be initialized before use
+$ mcpjungle init-server
+```
+
+By default, mcpjungle server runs in `development` mode which is ideal for individuals running it locally.
+
+In Production mode, the server enforces stricter security & compliance policies and will provide additional features like Authentication, ACLs, observability and more.
+
+Once you run a server in production mode, you must initialize it by running the `init-server` command on your client machine.
+
+This will create an admin user in the server and store its API access token in your home directory (`~/.mcpjungle.conf`). You can then use the mcpjungle cli to make authenticated requests to the server.
+
 ## Development
 
 This section contains notes for maintainers and contributors of MCPJungle.
