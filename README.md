@@ -163,9 +163,11 @@ If you're running MCPJungle in your organisation, we recommend running the Serve
 $ mcpjungle start --prod
 
 # you can also specify the server mode as environment variable (valid values are `development` and `production`)
-# this is convenient when using docker-compose or running the server in a container
 $ export SERVER_MODE=production
 $ mcpjungle start
+
+# this also works when running the server via docker-compose
+$ SERVER_MODE=production docker-compose up
 ```
 
 By default, mcpjungle server runs in `development` mode which is ideal for individuals running it locally.
