@@ -10,6 +10,7 @@ import (
 	"github.com/mcpjungle/mcpjungle/internal/model"
 	"github.com/mcpjungle/mcpjungle/internal/service/config"
 	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
+	"github.com/mcpjungle/mcpjungle/internal/service/mcp_client"
 	"github.com/mcpjungle/mcpjungle/internal/service/user"
 	"github.com/spf13/cobra"
 	"os"
@@ -96,16 +97,19 @@ func runStartServer(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to create MCP service: %v", err)
 	}
 
+	mcpClientService := mcp_client.NewMCPClientService(dbConn)
+
 	configService := config.NewServerConfigService(dbConn)
 	userService := user.NewUserService(dbConn)
 
 	// create the API server
 	opts := &api.ServerOptions{
-		Port:           port,
-		MCPProxyServer: mcpProxyServer,
-		MCPService:     mcpService,
-		ConfigService:  configService,
-		UserService:    userService,
+		Port:             port,
+		MCPProxyServer:   mcpProxyServer,
+		MCPService:       mcpService,
+		MCPClientService: mcpClientService,
+		ConfigService:    configService,
+		UserService:      userService,
 	}
 	s, err := api.NewServer(opts)
 	if err != nil {

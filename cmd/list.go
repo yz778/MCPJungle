@@ -43,6 +43,8 @@ func init() {
 
 	listCmd.AddCommand(listToolsCmd)
 	listCmd.AddCommand(listServersCmd)
+	listCmd.AddCommand(listClientsCmd)
+
 	rootCmd.AddCommand(listCmd)
 }
 

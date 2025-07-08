@@ -7,6 +7,7 @@ import (
 	"github.com/mcpjungle/mcpjungle/internal/model"
 	"github.com/mcpjungle/mcpjungle/internal/service/config"
 	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
+	"github.com/mcpjungle/mcpjungle/internal/service/mcp_client"
 	"github.com/mcpjungle/mcpjungle/internal/service/user"
 	"net/http"
 	"strings"
@@ -18,10 +19,11 @@ type ServerOptions struct {
 	// Port is the HTTP ports to bind the server to
 	Port string
 
-	MCPProxyServer *server.MCPServer
-	MCPService     *mcp.MCPService
-	ConfigService  *config.ServerConfigService
-	UserService    *user.UserService
+	MCPProxyServer   *server.MCPServer
+	MCPService       *mcp.MCPService
+	MCPClientService *mcp_client.McpClientService
+	ConfigService    *config.ServerConfigService
+	UserService      *user.UserService
 }
 
 // Server represents the MCPJungle registry server that handles MCP proxy and API requests
@@ -29,8 +31,9 @@ type Server struct {
 	port   string
 	router *gin.Engine
 
-	mcpProxyServer *server.MCPServer
-	mcpService     *mcp.MCPService
+	mcpProxyServer   *server.MCPServer
+	mcpService       *mcp.MCPService
+	mcpClientService *mcp_client.McpClientService
 
 	configService *config.ServerConfigService
 	userService   *user.UserService
@@ -43,12 +46,13 @@ func NewServer(opts *ServerOptions) (*Server, error) {
 		return nil, err
 	}
 	s := &Server{
-		port:           opts.Port,
-		router:         r,
-		mcpProxyServer: opts.MCPProxyServer,
-		mcpService:     opts.MCPService,
-		configService:  opts.ConfigService,
-		userService:    opts.UserService,
+		port:             opts.Port,
+		router:           r,
+		mcpProxyServer:   opts.MCPProxyServer,
+		mcpService:       opts.MCPService,
+		mcpClientService: opts.MCPClientService,
+		configService:    opts.ConfigService,
+		userService:      opts.UserService,
 	}
 	return s, nil
 }
@@ -168,6 +172,7 @@ func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 		apiV0.GET("/tools", listToolsHandler(opts.MCPService))
 		apiV0.POST("/tools/invoke", invokeToolHandler(opts.MCPService))
 		apiV0.GET("/tool", getToolHandler(opts.MCPService))
+		apiV0.GET("/clients", listMcpClientsHandler(opts.MCPClientService))
 	}
 
 	return r, nil
