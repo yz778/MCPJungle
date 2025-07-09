@@ -200,6 +200,11 @@ func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 			requireServerMode(opts.ConfigService, model.ModeProd),
 			listMcpClientsHandler(opts.MCPClientService),
 		)
+		apiV0.POST(
+			"/clients",
+			requireServerMode(opts.ConfigService, model.ModeProd),
+			createMcpClientHandler(opts.MCPClientService),
+		)
 		apiV0.DELETE(
 			"/clients/:name",
 			requireServerMode(opts.ConfigService, model.ModeProd),

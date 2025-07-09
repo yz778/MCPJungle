@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spf13/cobra"
+	"strings"
 )
 
 var listCmd = &cobra.Command{
@@ -104,7 +105,7 @@ func runListMcpClients(cmd *cobra.Command, args []string) error {
 	for i, c := range clients {
 		fmt.Printf("%d. %s\n", i+1, c.Name)
 		fmt.Println(c.Description)
-		fmt.Println("Allowed servers: " + c.AllowList)
+		fmt.Println("Allowed servers: " + strings.Join(c.AllowList, ","))
 
 		if i < len(clients)-1 {
 			fmt.Println()

@@ -1,6 +1,8 @@
 package mcp_client
 
 import (
+	"fmt"
+	"github.com/mcpjungle/mcpjungle/internal"
 	"github.com/mcpjungle/mcpjungle/internal/model"
 	"gorm.io/gorm"
 )
@@ -21,6 +23,19 @@ func (m *McpClientService) ListClients() ([]*model.McpClient, error) {
 		return nil, err
 	}
 	return clients, nil
+}
+
+// CreateMcpClient creates a new MCP client in the database and returns it.
+func (m *McpClientService) CreateMcpClient(client model.McpClient) (*model.McpClient, error) {
+	token, err := internal.GenerateAccessToken()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate access token: %w", err)
+	}
+	client.AccessToken = token
+	if err := m.db.Create(&client).Error; err != nil {
+		return nil, err
+	}
+	return &client, nil
 }
 
 // DeleteMcpClient removes an MCP client from the database and immediately revokes its access.

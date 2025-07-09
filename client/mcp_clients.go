@@ -1,6 +1,7 @@
 package client
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,7 +15,7 @@ type McpClient struct {
 
 	// AllowList is a comma-separated list of MCP Servers that this client
 	// is allowed to access from MCPJungle.
-	AllowList string `json:"allow_list"`
+	AllowList []string `json:"allow_list"`
 }
 
 func (c *Client) ListMcpClients() ([]McpClient, error) {
@@ -64,4 +65,39 @@ func (c *Client) DeleteMcpClient(name string) error {
 	}
 
 	return nil
+}
+
+func (c *Client) CreateMcpClient(mcpClient *McpClient) (string, error) {
+	u, _ := c.constructAPIEndpoint("/clients")
+
+	body, err := json.Marshal(mcpClient)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal client data: %w", err)
+	}
+
+	req, err := c.newRequest(http.MethodPost, u, bytes.NewReader(body))
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to send request to %s: %w", u, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("request failed with status: %d, message: %s", resp.StatusCode, body)
+	}
+
+	var response struct {
+		AccessToken string `json:"access_token"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return "", fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return response.AccessToken, nil
 }
