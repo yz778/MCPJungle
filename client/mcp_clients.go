@@ -43,3 +43,25 @@ func (c *Client) ListMcpClients() ([]McpClient, error) {
 
 	return clients, nil
 }
+
+func (c *Client) DeleteMcpClient(name string) error {
+	u, _ := c.constructAPIEndpoint("/clients/" + name)
+
+	req, err := c.newRequest(http.MethodDelete, u, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to send request to %s: %w", u, err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("request failed with status: %d, message: %s", resp.StatusCode, body)
+	}
+
+	return nil
+}

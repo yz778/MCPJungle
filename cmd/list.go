@@ -25,8 +25,8 @@ var listServersCmd = &cobra.Command{
 	RunE:  runListServers,
 }
 
-var listClientsCmd = &cobra.Command{
-	Use:   "clients",
+var listMcpClientsCmd = &cobra.Command{
+	Use:   "mcp-clients",
 	Short: "List MCP clients (Production mode)",
 	Long: "List MCP clients that are authorized to access the MCP Proxy server.\n" +
 		"This command is only available in Production mode.",
@@ -43,7 +43,7 @@ func init() {
 
 	listCmd.AddCommand(listToolsCmd)
 	listCmd.AddCommand(listServersCmd)
-	listCmd.AddCommand(listClientsCmd)
+	listCmd.AddCommand(listMcpClientsCmd)
 
 	rootCmd.AddCommand(listCmd)
 }

@@ -22,3 +22,10 @@ func (m *McpClientService) ListClients() ([]*model.McpClient, error) {
 	}
 	return clients, nil
 }
+
+// DeleteMcpClient removes an MCP client from the database and immediately revokes its access.
+// It is an idempotent operation. Deleting a client that does not exist will not return an error.
+func (m *McpClientService) DeleteMcpClient(name string) error {
+	result := m.db.Where("name = ?", name).Delete(&model.McpClient{})
+	return result.Error
+}

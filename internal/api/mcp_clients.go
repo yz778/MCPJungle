@@ -16,3 +16,18 @@ func listMcpClientsHandler(mcpClientService *mcp_client.McpClientService) gin.Ha
 		c.JSON(http.StatusOK, clients)
 	}
 }
+
+func deleteMcpClientHandler(mcpClientService *mcp_client.McpClientService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		name := c.Param("name")
+		if name == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
+			return
+		}
+		if err := mcpClientService.DeleteMcpClient(name); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.Status(http.StatusNoContent)
+	}
+}

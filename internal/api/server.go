@@ -112,7 +112,7 @@ func requireInitialized(configService *config.ServerConfigService) gin.HandlerFu
 	}
 }
 
-// requireAuthIfProd is middleware that checks for a valid admin token if the server is in production mode.
+// checkAuthForAPIAccess is middleware that checks for a valid admin token if the server is in production mode.
 // In development mode, it allows all requests without authentication.
 func checkAuthForAPIAccess(configService *config.ServerConfigService, userService *user.UserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -199,6 +199,11 @@ func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 			"/clients",
 			requireServerMode(opts.ConfigService, model.ModeProd),
 			listMcpClientsHandler(opts.MCPClientService),
+		)
+		apiV0.DELETE(
+			"/clients/:name",
+			requireServerMode(opts.ConfigService, model.ModeProd),
+			deleteMcpClientHandler(opts.MCPClientService),
 		)
 	}
 
