@@ -9,6 +9,8 @@ type McpClient struct {
 	Name        string `json:"name" gorm:"uniqueIndex;not null"`
 	Description string `json:"description"`
 
+	AccessToken string `json:"access_token" gorm:"unique; not null"`
+
 	// AllowList contains a list of MCP Server names that this client is allowed to view and call
-	AllowList []string `json:"allow_list" gorm:"type:text[];default:array[]::text[]"`
+	AllowList []string `json:"allow_list" gorm:"type:text[]"`
 }
