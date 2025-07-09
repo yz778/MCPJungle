@@ -142,6 +142,28 @@ func checkAuthForAPIAccess(configService *config.ServerConfigService, userServic
 	}
 }
 
+// requireServerMode is middleware that checks if the server is in a specific mode.
+// If not, the request is rejected with a 403 Forbidden status.
+func requireServerMode(configService *config.ServerConfigService, m model.ServerMode) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cfg, err := configService.GetConfig()
+		if err != nil {
+			c.AbortWithStatusJSON(
+				http.StatusServiceUnavailable, gin.H{"error": "failed to fetch server config while checking mode"},
+			)
+			return
+		}
+		if cfg.Mode != m {
+			c.AbortWithStatusJSON(
+				http.StatusForbidden,
+				gin.H{"error": fmt.Sprintf("this request is only allowed in %s mode", m)},
+			)
+			return
+		}
+		c.Next()
+	}
+}
+
 // newRouter sets up the Gin router with the MCP proxy server and API endpoints.
 func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 	gin.SetMode(gin.ReleaseMode)
@@ -172,7 +194,12 @@ func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 		apiV0.GET("/tools", listToolsHandler(opts.MCPService))
 		apiV0.POST("/tools/invoke", invokeToolHandler(opts.MCPService))
 		apiV0.GET("/tool", getToolHandler(opts.MCPService))
-		apiV0.GET("/clients", listMcpClientsHandler(opts.MCPClientService))
+
+		apiV0.GET(
+			"/clients",
+			requireServerMode(opts.ConfigService, model.ModeProd),
+			listMcpClientsHandler(opts.MCPClientService),
+		)
 	}
 
 	return r, nil
