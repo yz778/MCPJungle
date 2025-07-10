@@ -142,6 +142,41 @@ func checkAuthForAPIAccess(configService *config.ServerConfigService, userServic
 	}
 }
 
+// checkAuthForMcpProxyAccess is middleware for MCP proxy that checks for a valid MCP client token
+// if the server is in production mode.
+// In development mode, mcp clients do not require auth to access the MCP proxy.
+func checkAuthForMcpProxyAccess(
+	configService *config.ServerConfigService,
+	mcpClientService *mcp_client.McpClientService,
+) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cfg, err := configService.GetConfig()
+		if err != nil {
+			c.AbortWithStatusJSON(
+				http.StatusServiceUnavailable, gin.H{"error": "failed to fetch server config while checking mcp auth"},
+			)
+			return
+		}
+		if cfg.Mode == model.ModeDev {
+			c.Next()
+			return
+		}
+		authHeader := c.GetHeader("Authorization")
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		if token == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing MCP client access token"})
+			return
+		}
+		client, err := mcpClientService.GetClientByToken(token)
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid MCP client token"})
+			return
+		}
+		c.Set("mcpClient", client)
+		c.Next()
+	}
+}
+
 // requireServerMode is middleware that checks if the server is in a specific mode.
 // If not, the request is rejected with a 403 Forbidden status.
 func requireServerMode(configService *config.ServerConfigService, m model.ServerMode) gin.HandlerFunc {
@@ -179,14 +214,20 @@ func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 	r.POST("/init", registerInitServerHandler(opts.ConfigService, opts.UserService))
 
 	requireInit := requireInitialized(opts.ConfigService)
-	checkAuth := checkAuthForAPIAccess(opts.ConfigService, opts.UserService)
+	checkUserAuth := checkAuthForAPIAccess(opts.ConfigService, opts.UserService)
+	checkMcpClientAuth := checkAuthForMcpProxyAccess(opts.ConfigService, opts.MCPClientService)
 
 	// Set up the MCP proxy server on /mcp
 	streamableHttpServer := server.NewStreamableHTTPServer(opts.MCPProxyServer)
-	r.Any("/mcp", requireInit, gin.WrapH(streamableHttpServer))
+	r.Any(
+		"/mcp",
+		requireInit,
+		checkMcpClientAuth,
+		gin.WrapH(streamableHttpServer),
+	)
 
 	// Setup API endpoints
-	apiV0 := r.Group(V0PathPrefix, requireInit, checkAuth)
+	apiV0 := r.Group(V0PathPrefix, requireInit, checkUserAuth)
 	{
 		apiV0.POST("/servers", registerServerHandler(opts.MCPService))
 		apiV0.DELETE("/servers/:name", deregisterServerHandler(opts.MCPService))

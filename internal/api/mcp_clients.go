@@ -29,7 +29,7 @@ func createMcpClientHandler(mcpClientService *mcp_client.McpClientService) gin.H
 			c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
 			return
 		}
-		client, err := mcpClientService.CreateMcpClient(req)
+		client, err := mcpClientService.CreateClient(req)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -45,7 +45,7 @@ func deleteMcpClientHandler(mcpClientService *mcp_client.McpClientService) gin.H
 			c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
 			return
 		}
-		if err := mcpClientService.DeleteMcpClient(name); err != nil {
+		if err := mcpClientService.DeleteClient(name); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}

@@ -1,6 +1,7 @@
 package mcp_client
 
 import (
+	"errors"
 	"fmt"
 	"github.com/mcpjungle/mcpjungle/internal"
 	"github.com/mcpjungle/mcpjungle/internal/model"
@@ -25,8 +26,8 @@ func (m *McpClientService) ListClients() ([]*model.McpClient, error) {
 	return clients, nil
 }
 
-// CreateMcpClient creates a new MCP client in the database and returns it.
-func (m *McpClientService) CreateMcpClient(client model.McpClient) (*model.McpClient, error) {
+// CreateClient creates a new MCP client in the database and returns it.
+func (m *McpClientService) CreateClient(client model.McpClient) (*model.McpClient, error) {
 	token, err := internal.GenerateAccessToken()
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate access token: %w", err)
@@ -38,9 +39,22 @@ func (m *McpClientService) CreateMcpClient(client model.McpClient) (*model.McpCl
 	return &client, nil
 }
 
-// DeleteMcpClient removes an MCP client from the database and immediately revokes its access.
+// GetClientByToken retrieves an MCP client by its access token from the database.
+// It returns an error if no such client is found.
+func (m *McpClientService) GetClientByToken(token string) (*model.McpClient, error) {
+	var client model.McpClient
+	if err := m.db.Where("access_token = ?", token).First(&client).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("client not found")
+		}
+		return nil, err
+	}
+	return &client, nil
+}
+
+// DeleteClient removes an MCP client from the database and immediately revokes its access.
 // It is an idempotent operation. Deleting a client that does not exist will not return an error.
-func (m *McpClientService) DeleteMcpClient(name string) error {
+func (m *McpClientService) DeleteClient(name string) error {
 	result := m.db.Where("name = ?", name).Delete(&model.McpClient{})
 	return result.Error
 }
