@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/mark3labs/mcp-go/server"
@@ -157,10 +158,17 @@ func checkAuthForMcpProxyAccess(
 			)
 			return
 		}
+
+		// the gin context doesn't get passed down to the MCP proxy server, so we need to
+		// set values in the underlying request's context to be able to access them from proxy.
+		ctx := context.WithValue(c.Request.Context(), "mode", cfg.Mode)
+		c.Request = c.Request.WithContext(ctx)
+
 		if cfg.Mode == model.ModeDev {
 			c.Next()
 			return
 		}
+
 		authHeader := c.GetHeader("Authorization")
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 		if token == "" {
@@ -172,7 +180,11 @@ func checkAuthForMcpProxyAccess(
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid MCP client token"})
 			return
 		}
-		c.Set("mcpClient", client)
+
+		// inject the authenticated MCP client in context for the proxy to use
+		ctx = context.WithValue(c.Request.Context(), "client", client)
+		c.Request = c.Request.WithContext(ctx)
+
 		c.Next()
 	}
 }

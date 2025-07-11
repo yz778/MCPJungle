@@ -14,3 +14,14 @@ type McpClient struct {
 	// AllowList contains a list of MCP Server names that this client is allowed to view and call
 	AllowList []string `json:"allow_list" gorm:"type:text[]"`
 }
+
+// CheckHasServerAccess returns true if this client has access to the specified MCP server.
+// If not, it returns false.
+func (c *McpClient) CheckHasServerAccess(serverName string) bool {
+	for _, allowed := range c.AllowList {
+		if allowed == serverName {
+			return true
+		}
+	}
+	return false
+}
