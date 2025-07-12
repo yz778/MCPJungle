@@ -26,7 +26,8 @@ func (m *McpClientService) ListClients() ([]*model.McpClient, error) {
 	return clients, nil
 }
 
-// CreateClient creates a new MCP client in the database and returns it.
+// CreateClient creates a new MCP client in the database.
+// It also generates a new access token for the client.
 func (m *McpClientService) CreateClient(client model.McpClient) (*model.McpClient, error) {
 	token, err := internal.GenerateAccessToken()
 	if err != nil {

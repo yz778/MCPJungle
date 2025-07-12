@@ -1,14 +1,12 @@
 package model
 
-import (
-	"github.com/google/uuid"
-	"gorm.io/gorm"
-)
+import "gorm.io/gorm"
 
 type McpServer struct {
-	ID          uuid.UUID `json:"-" gorm:"type:uuid;primaryKey"`
-	Name        string    `json:"name" gorm:"uniqueIndex;not null"`
-	Description string    `json:"description"`
+	gorm.Model
+
+	Name        string `json:"name" gorm:"uniqueIndex;not null"`
+	Description string `json:"description"`
 
 	// URL must be a valid http/https URL.
 	// MCPJungle only supports streamable HTTP transport as of now.
@@ -18,9 +16,4 @@ type McpServer struct {
 	// BearerToken is an optional token used for authenticating requests to the MCP server.
 	// If present, it will be used to set the Authorization header in all requests to this MCP server.
 	BearerToken string `json:"bearer_token,omitempty" gorm:"type:text"`
-}
-
-func (s *McpServer) BeforeCreate(tx *gorm.DB) (err error) {
-	s.ID = uuid.New()
-	return nil
 }
