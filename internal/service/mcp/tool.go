@@ -180,8 +180,9 @@ func (m *MCPService) deregisterServerTools(s *model.McpServer) error {
 	}
 
 	// now it's safe to delete the server's tools from the DB
-	if err := m.db.Where("server_id = ?", s.ID).Delete(&model.Tool{}).Error; err != nil {
-		return fmt.Errorf("failed to delete tools for server %s: %w", s.Name, err)
+	result := m.db.Unscoped().Where("server_id = ?", s.ID).Delete(&model.Tool{})
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete tools for server %s: %w", s.Name, result.Error)
 	}
 
 	// delete tools from MCP proxy server
