@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/mark3labs/mcp-go/mcp"
+	"github.com/mcpjungle/mcpjungle/internal/model"
 )
 
 // initMCPProxyServer initializes the MCP proxy server.
@@ -42,6 +43,18 @@ func (m *MCPService) mcpProxyToolCallHandler(ctx context.Context, request mcp.Ca
 	serverName, toolName, ok := splitServerToolName(name)
 	if !ok {
 		return nil, fmt.Errorf("invalid input: tool name does not contain a %s separator", serverToolNameSep)
+	}
+
+	serverMode := ctx.Value("mode").(model.ServerMode)
+	if serverMode == model.ModeProd {
+		// In production mode, we need to check whether the MCP client is authorized to access the MCP server.
+		// If not, return error Unauthorized.
+		c := ctx.Value("client").(*model.McpClient)
+		if !c.CheckHasServerAccess(serverName) {
+			return nil, fmt.Errorf(
+				"client %s is not authorized to access MCP server %s", c.Name, serverName,
+			)
+		}
 	}
 
 	// get the MCP server details from the database

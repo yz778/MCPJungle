@@ -1,10 +1,9 @@
 package user
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/mcpjungle/mcpjungle/internal"
 	"github.com/mcpjungle/mcpjungle/internal/model"
 	"gorm.io/gorm"
 )
@@ -20,7 +19,7 @@ func NewUserService(db *gorm.DB) *UserService {
 
 // CreateAdminUser creates an admin user in the MCPJungle system.
 func (u *UserService) CreateAdminUser() (*model.User, error) {
-	token, err := generateAccessToken()
+	token, err := internal.GenerateAccessToken()
 	if err != nil {
 		return nil, err
 	}
@@ -48,14 +47,4 @@ func (u *UserService) VerifyAdminToken(token string) (*model.User, error) {
 		return nil, fmt.Errorf("user is not an admin")
 	}
 	return &user, nil
-}
-
-// generateAccessToken generates a 256-bit secure random access token for user authentication.
-func generateAccessToken() (string, error) {
-	const tokenLength = 32
-	b := make([]byte, tokenLength)
-	if _, err := rand.Read(b); err != nil {
-		return "", fmt.Errorf("failed to generate access token: %v", err)
-	}
-	return base64.URLEncoding.WithPadding(base64.NoPadding).EncodeToString(b), nil
 }
