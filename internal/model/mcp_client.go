@@ -1,6 +1,10 @@
 package model
 
-import "gorm.io/gorm"
+import (
+	"encoding/json"
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
+)
 
 // McpClient represents MCP clients and their access to the MCP Servers provided MCPJungle MCP server
 type McpClient struct {
@@ -12,13 +16,22 @@ type McpClient struct {
 	AccessToken string `json:"access_token" gorm:"unique; not null"`
 
 	// AllowList contains a list of MCP Server names that this client is allowed to view and call
-	AllowList []string `json:"allow_list" gorm:"type:text[]"`
+	// storing the list of server names as a JSON array is a convenient way for now.
+	// In the future, this will be removed in favor of a separate table for ACLs.
+	AllowList datatypes.JSON `json:"allow_list" gorm:"type:jsonb; not null"`
 }
 
 // CheckHasServerAccess returns true if this client has access to the specified MCP server.
 // If not, it returns false.
 func (c *McpClient) CheckHasServerAccess(serverName string) bool {
-	for _, allowed := range c.AllowList {
+	if c.AllowList == nil {
+		return false
+	}
+	var allowedServers []string
+	if err := json.Unmarshal(c.AllowList, &allowedServers); err != nil {
+		return false
+	}
+	for _, allowed := range allowedServers {
 		if allowed == serverName {
 			return true
 		}
