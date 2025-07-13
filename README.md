@@ -185,7 +185,7 @@ You can then use the mcpjungle cli to make authenticated requests to the server.
 
 #### Access Control
 
-In development mode, all MCP clients have full access to all the MCP servers registered in MCPJungle Proxy.
+In `development` mode, all MCP clients have full access to all the MCP servers registered in MCPJungle Proxy.
 
 `production` mode lets you control which MCP clients can access which MCP servers.
 
@@ -194,11 +194,11 @@ Suppose you have registered 2 MCP servers `calculator` and `github` in MCPJungle
 By default, no MCP client can access these servers. **You must create an MCP Client in mcpjungle and explicitly allow it to access the MCP servers.**
 
 ```bash
-# Create a new MCP client named `cursor-local` which can access the `calculator` and `github MCP servers
+# Create a new MCP client for your Cursor IDE to use. It can access the calculator and github MCP servers
 $ mcpjungle create mcp-client cursor-local --allow "calculator, github"
 
 MCP client 'cursor-local' created successfully!
-Servers accessible: calculator,huggingface
+Servers accessible: calculator,github
 
 Access token: 1YHf2LwE1LXtp5lW_vM-gmdYHlPHdqwnILitBhXE4Aw
 Send this token in the `Authorization: Bearer {token}` HTTP header.
@@ -222,7 +222,9 @@ For example, you can add the following configuration in Cursor to connect to MCP
 }
 ```
 
-[!NOTE]
+A client that has access to a particular server this way can view and call all the tools provided by that server.
+
+> [!NOTE]
 > If you don't specify the `--allow` flag, the MCP client will not be able to access any MCP servers.
 
 ## Contributing 💻
