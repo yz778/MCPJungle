@@ -172,7 +172,7 @@ $ SERVER_MODE=production docker-compose up
 
 By default, mcpjungle server runs in `development` mode which is ideal for individuals running it locally.
 
-In Production mode, the server enforces stricter security & compliance policies and will provide additional features like Authentication, ACLs, observability and more.
+In Production mode, the server enforces stricter security policies and will provide additional features like Authentication, ACLs, observability and more.
 
 After starting the server in production mode, you must initialize it by running the following command on your client machine:
 ```bash
@@ -183,38 +183,48 @@ This will create an admin user in the server and store its API access token in y
 
 You can then use the mcpjungle cli to make authenticated requests to the server.
 
+#### Access Control
+
+In development mode, all MCP clients have full access to all the MCP servers registered in MCPJungle Proxy.
+
+`production` mode lets you control which MCP clients can access which MCP servers.
+
+Suppose you have registered 2 MCP servers `calculator` and `github` in MCPJungle in production mode.
+
+By default, no MCP client can access these servers. **You must create an MCP Client in mcpjungle and explicitly allow it to access the MCP servers.**
+
+```bash
+# Create a new MCP client named `cursor-local` which can access the `calculator` and `github MCP servers
+$ mcpjungle create mcp-client cursor-local --allow "calculator, github"
+
+MCP client 'cursor-local' created successfully!
+Servers accessible: calculator,huggingface
+
+Access token: 1YHf2LwE1LXtp5lW_vM-gmdYHlPHdqwnILitBhXE4Aw
+Send this token in the `Authorization: Bearer {token}` HTTP header.
+```
+
+Mcpjungle creates an access token for your client.
+Configure your client or agent to send this token in the `Authorization` header when making requests to the mcpjungle proxy.
+
+For example, you can add the following configuration in Cursor to connect to MCPJungle:
+
+```json
+{
+  "mcpServers": {
+    "mcpjungle": {
+      "url": "http://localhost:8080/mcp",
+      "headers": {
+        "Authorization": "Bearer 1YHf2LwE1LXtp5lW_vM-gmdYHlPHdqwnILitBhXE4Aw"
+      }
+    }
+  }
+}
+```
+
+[!NOTE]
+> If you don't specify the `--allow` flag, the MCP client will not be able to access any MCP servers.
+
 ## Contributing 💻
 
-This section contains notes for Developers and Contributors of MCPJungle. Users can skip this section.
-
-### Build for local testing
-```bash
-# Single binary for your current system
-$ goreleaser build --single-target --clean --snapshot
-
-# Test the full release assets (binaries, docker image) without publishing
-goreleaser release --clean --snapshot --skip publish
-
-# Binaries for all supported platforms
-$ goreleaser release --snapshot --clean
-```
-
-### Create a new release
-1. Create a Git Tag with the new version
-
-```bash
-git tag -a v0.1.0 -m "Release version 0.1.0"
-git push origin v0.1.0
-```
-
-2. Release
-```bash
-# Make sure GPG is present on your system and you have a default key which is added to Github.
-
-# set your github access token
-export GITHUB_TOKEN="<your GH token>"
-
-goreleaser release --clean
-```
-
-This will create a new release under Releases and also make it available via Homebrew.
+If you're interested in contributing to MCPJungle, see [Developer Docs](./docs/developer.md).
