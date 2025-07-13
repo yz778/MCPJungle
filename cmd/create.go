@@ -50,7 +50,7 @@ func init() {
 
 func runCreateMcpClient(cmd *cobra.Command, args []string) error {
 	// convert the comma-separated list of allowed servers into a slice
-	var allowList []string
+	allowList := make([]string, 0)
 	for _, s := range strings.Split(createMcpClientCmdAllowedServers, ",") {
 		trimmed := strings.TrimSpace(s)
 		if trimmed != "" {
@@ -73,10 +73,15 @@ func runCreateMcpClient(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("MCP client '%s' created successfully!\n", c.Name)
-	fmt.Println("Servers accessible: " + strings.Join(c.AllowList, ","))
-	fmt.Println()
-	fmt.Printf("Access token: %s\n", token)
-	fmt.Println("Send this token in the `Authorization: Bearer {token}` HTTP header.")
+
+	if len(c.AllowList) > 0 {
+		fmt.Println("Servers accessible: " + strings.Join(c.AllowList, ","))
+	} else {
+		fmt.Println("This client does not have access to any MCP servers.")
+	}
+
+	fmt.Printf("\nAccess token: %s\n", token)
+	fmt.Println("Your client should send this token in the `Authorization: Bearer {token}` HTTP header.")
 
 	return nil
 }

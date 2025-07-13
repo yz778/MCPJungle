@@ -29,6 +29,7 @@ func createMcpClientHandler(mcpClientService *mcp_client.McpClientService) gin.H
 			c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
 			return
 		}
+		// TODO: if allow list in the request is null, convert it to an empty JSON array
 		client, err := mcpClientService.CreateClient(req)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
