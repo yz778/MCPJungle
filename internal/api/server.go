@@ -211,10 +211,44 @@ func requireServerMode(configService *config.ServerConfigService, m model.Server
 	}
 }
 
+// securityHeaders middleware adds security headers to all responses
+func securityHeaders() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Content Security Policy - Allow specific trusted CDNs
+		c.Header("Content-Security-Policy",
+			"default-src 'self'; "+
+			"script-src 'self' 'unsafe-inline' 'unsafe-eval' https://unpkg.com https://cdn.tailwindcss.com; "+
+			"style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; "+
+			"connect-src 'self'; "+
+			"img-src 'self' data:; "+
+			"font-src 'self'; "+
+			"object-src 'none'; "+
+			"base-uri 'self'; "+
+			"form-action 'self'")
+
+		// Other security headers
+		c.Header("X-Content-Type-Options", "nosniff")
+		c.Header("X-Frame-Options", "DENY")
+		c.Header("X-XSS-Protection", "1; mode=block")
+		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
+		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+
+		// HSTS for HTTPS (only add if using HTTPS)
+		if c.Request.TLS != nil {
+			c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+		}
+
+		c.Next()
+	}
+}
+
 // newRouter sets up the Gin router with the MCP proxy server and API endpoints.
 func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.Default()
+
+	// Add security headers to all responses
+	r.Use(securityHeaders())
 
 	r.GET(
 		"/health",
@@ -222,6 +256,19 @@ func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 			c.JSON(200, gin.H{"status": "ok"})
 		},
 	)
+
+	// Serve static web UI files
+	r.Static("/static", "./web/static")
+	r.StaticFile("/", "./web/index.html")
+	r.StaticFile("/dashboard", "./web/dashboard.html")
+	r.StaticFile("/servers", "./web/servers.html")
+	r.StaticFile("/tools", "./web/tools.html")
+	r.StaticFile("/config", "./web/config.html")
+
+	// 404 handler for unmatched routes
+	r.NoRoute(func(c *gin.Context) {
+		c.File("./web/404.html")
+	})
 
 	r.POST("/init", registerInitServerHandler(opts.ConfigService, opts.UserService))
 
