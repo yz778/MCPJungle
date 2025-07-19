@@ -214,7 +214,7 @@ const FormValidator = {
         return errors;
     },
 
-    getErrorMessage(rule, value, param) {
+    getErrorMessage(rule, param) {
         const messages = {
             required: 'This field is required',
             email: 'Please enter a valid email address',
@@ -381,19 +381,53 @@ const KeyboardNav = {
     },
 
     closeTopModal() {
-        // Find and close the topmost modal
+        // Find and close the topmost modal with confirmation if needed
         const modals = document.querySelectorAll('[x-show*="Modal"]');
         modals.forEach(modal => {
             const alpineData = Alpine.$data(modal);
             if (alpineData) {
-                // Close any open modals
+                // Check for open modals and handle them appropriately
                 Object.keys(alpineData).forEach(key => {
                     if (key.includes('Modal') && alpineData[key] === true) {
-                        alpineData[key] = false;
+                        // Check if this is a form modal with unsaved changes
+                        if (this.hasUnsavedChanges(alpineData, key)) {
+                            this.confirmModalClose(alpineData, key);
+                        } else {
+                            alpineData[key] = false;
+                        }
                     }
                 });
             }
         });
+    },
+
+    hasUnsavedChanges(alpineData, modalKey) {
+        // Check if there are unsaved changes in form modals
+        if (modalKey.includes('Add') || modalKey.includes('Edit')) {
+            const form = alpineData.serverForm || alpineData.form || {};
+
+            // Check if any form fields have content
+            const hasContent = Object.values(form).some(value =>
+                value && typeof value === 'string' && value.trim() !== ''
+            );
+
+            return hasContent;
+        }
+        return false;
+    },
+
+    confirmModalClose(alpineData, modalKey) {
+        const confirmed = confirm(
+            'You have unsaved changes. Are you sure you want to close this dialog? Your changes will be lost.'
+        );
+
+        if (confirmed) {
+            alpineData[modalKey] = false;
+            // Clear the form if it exists
+            if (alpineData.closeModal && typeof alpineData.closeModal === 'function') {
+                alpineData.closeModal();
+            }
+        }
     },
 
     handleTabNavigation(e) {
@@ -485,7 +519,7 @@ const A11y = {
 
             if (label && !input.getAttribute('aria-labelledby')) {
                 if (!label.id) {
-                    label.id = `label-${Math.random().toString(36).substr(2, 9)}`;
+                    label.id = `label-${Math.random().toString(36).substring(2, 11)}`;
                 }
                 input.setAttribute('aria-labelledby', label.id);
             }

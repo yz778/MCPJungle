@@ -9,6 +9,17 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link rel="stylesheet" href="/static/css/app.css">
     <script src="/static/js/app.js"></script>
+    <script src="/static/js/components/notifications.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script>
+        // Ensure all functions are available before Alpine.js loads
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize global notifications
+            if (typeof createGlobalNotifications === 'function') {
+                window.globalNotifications = createGlobalNotifications();
+            }
+        });
+    </script>
 </head>
 
 <body class="bg-gray-50" x-data="toolsApp()">
@@ -47,22 +58,41 @@
             </div>
         </nav>
 
-        <!-- Error notifications -->
-        <div class="fixed top-4 right-4 z-50" x-data="errorHandler()">
-            <template x-for="error in errors" :key="error.id">
-                <div class="mb-2 max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden">
+        <!-- Notifications -->
+        <div class="fixed top-4 right-4 z-50" x-data="notificationComponent()">
+            <!-- Error notifications -->
+            <template x-for="error in notifications.errors" :key="error.id">
+                <div class="mb-2 max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-red-200 overflow-hidden notification-enter">
                     <div class="p-4">
                         <div class="flex items-start">
-                            <div class="flex-shrink-0">
-                                <svg class="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
+                            <div class="flex-shrink-0" x-html="getNotificationIcon('error')"></div>
                             <div class="ml-3 w-0 flex-1 pt-0.5">
                                 <p class="text-sm font-medium text-gray-900" x-text="error.message"></p>
                             </div>
                             <div class="ml-4 flex-shrink-0 flex">
-                                <button @click="removeError(error.id)" class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none">
+                                <button @click="notifications.removeError(error.id)" class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none">
+                                    <span class="sr-only">Close</span>
+                                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Success notifications -->
+            <template x-for="success in notifications.successes" :key="success.id">
+                <div class="mb-2 max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-green-200 overflow-hidden notification-enter">
+                    <div class="p-4">
+                        <div class="flex items-start">
+                            <div class="flex-shrink-0" x-html="getNotificationIcon('success')"></div>
+                            <div class="ml-3 w-0 flex-1 pt-0.5">
+                                <p class="text-sm font-medium text-gray-900" x-text="success.message"></p>
+                            </div>
+                            <div class="ml-4 flex-shrink-0 flex">
+                                <button @click="notifications.removeSuccess(success.id)" class="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none">
                                     <span class="sr-only">Close</span>
                                     <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                         <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -146,8 +176,11 @@
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                                         Tool
                                     </span>
-                                    <button class="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                                        Invoke →
+                                    <button class="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                                        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                        Invoke
                                     </button>
                                 </div>
                             </div>
@@ -158,8 +191,8 @@
         </main>
 
         <!-- Tool Detail Modal -->
-        <div x-show="selectedTool" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" x-transition>
-            <div class="relative top-10 mx-auto p-5 border max-w-4xl shadow-lg rounded-md bg-white">
+        <div x-show="selectedTool" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" x-transition @keydown.escape="closeToolModal()">
+            <div class="relative top-10 mx-auto p-6 border border-gray-200 max-w-4xl shadow-xl rounded-lg bg-white modal-content">
                 <div class="mt-3">
                     <div class="flex justify-between items-start mb-4">
                         <div>
@@ -192,10 +225,13 @@
                                 <div class="space-y-4" x-html="renderInputFields()"></div>
 
                                 <div class="mt-6 flex justify-end space-x-3">
-                                    <button type="button" @click="closeToolModal()" class="btn-secondary">
+                                    <button type="button" @click="closeToolModal()" class="inline-flex items-center px-3 py-1.5 border border-300 text-sm font-medium rounded-md text-700 bg-50 hover:bg-100 focus:outline-none focus:ring-2 focus:ring-500 focus:ring-offset-2 transition-colors">
                                         Cancel
                                     </button>
-                                    <button type="submit" :disabled="invoking" class="btn-primary">
+                                    <button type="submit" :disabled="invoking" class="inline-flex items-center px-3 py-1.5 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                                        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
                                         <span x-show="invoking" class="spinner mr-2"></span>
                                         <span x-text="invoking ? 'Invoking...' : 'Invoke Tool'"></span>
                                     </button>
@@ -329,7 +365,7 @@
 
                 renderInputFields() {
                     if (!this.selectedTool?.input_schema) {
-                        return '<p class="text-sm text-gray-500">No input parameters required</p>';
+                        return '<div class="text-center py-4"><p class="text-sm text-gray-500">No input parameters required</p></div>';
                     }
 
                     try {
@@ -338,24 +374,29 @@
                             : this.selectedTool.input_schema;
 
                         if (!schema.properties) {
-                            return '<p class="text-sm text-gray-500">No input parameters required</p>';
+                            return '<div class="text-center py-4"><p class="text-sm text-gray-500">No input parameters required</p></div>';
                         }
 
                         let html = '';
                         Object.entries(schema.properties).forEach(([key, prop]) => {
                             const required = schema.required && schema.required.includes(key);
                             const type = prop.type || 'string';
+                            const placeholder = prop.example || prop.default || `Enter ${key}...`;
 
                             html += `
-                                <div>
+                                <div class="form-group">
                                     <label class="form-label">
-                                        ${key} ${required ? '*' : ''}
-                                        ${prop.description ? `<span class="text-gray-500 font-normal">- ${prop.description}</span>` : ''}
+                                        ${key.charAt(0).toUpperCase() + key.slice(1)}
+                                        ${required ? '<span class="text-red-500 ml-1" aria-label="required">*</span>' : ''}
                                     </label>
-                                    <input type="${type === 'number' ? 'number' : 'text'}"
+                                    ${prop.description ? `<p class="text-xs text-gray-500 mb-2">${prop.description}</p>` : ''}
+                                    <input type="${type === 'number' ? 'number' : type === 'integer' ? 'number' : 'text'}"
                                            x-model="toolInputs.${key}"
-                                           class="form-input"
-                                           ${required ? 'required' : ''}>
+                                           class="block w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                           placeholder="${placeholder}"
+                                           ${required ? 'required' : ''}
+                                           ${type === 'integer' ? 'step="1"' : ''}
+                                           ${type === 'number' ? 'step="any"' : ''}>
                                 </div>
                             `;
                         });
@@ -363,7 +404,7 @@
                         return html;
                     } catch (error) {
                         console.error('Failed to render input fields:', error);
-                        return '<p class="text-sm text-red-500">Error parsing input schema</p>';
+                        return '<div class="text-center py-4"><p class="text-sm text-red-500">Error parsing input schema</p></div>';
                     }
                 },
 
@@ -420,13 +461,19 @@
                 },
 
                 showError(message) {
-                    // This would integrate with the global error handler
-                    console.error(message);
+                    if (window.notifications) {
+                        window.notifications.showError(message);
+                    } else {
+                        console.error(message);
+                    }
                 },
 
                 showSuccess(message) {
-                    // This would integrate with a success notification system
-                    console.log(message);
+                    if (window.notifications) {
+                        window.notifications.showSuccess(message);
+                    } else {
+                        console.log(message);
+                    }
                 },
 
                 destroy() {
