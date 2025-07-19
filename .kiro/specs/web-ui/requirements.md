@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This feature adds a dynamic web user interface to the existing MCP Jungle application, providing an easy-to-use web interface that leverages Server-Sent Events (SSE) for real-time updates. The web UI will be built using a CDN-based frontend framework to avoid server-side build dependencies, making it lightweight and easy to deploy.
+This feature adds a dynamic web user interface to the existing MCP Jungle application, providing an easy-to-use web interface that uses polling for near real-time updates. The web UI will be built using a CDN-based frontend framework to avoid server-side build dependencies, making it lightweight and easy to deploy.
 
 ## Requirements
 
