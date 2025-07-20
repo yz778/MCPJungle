@@ -21,9 +21,9 @@ MCPJungle is a single source-of-truth registry for all [Model Context Protocol](
 <p align="center">MCPJungle is the only MCP Server your agents need to connect to!</p>
 
 ## Who should use MCPJungle?
-1. Devs using MCP Clients like Claude, Cursor, & Windsurf that need to connect to **multiple** MCP servers for calling tools.
-2. Devs building AI Agents that need to access **multiple** MCP servers for calling tools.
-3. Organisations who want to view and manage all their MCP servers from one centralized place. Secure & Private 🔒
+1. Individuals using MCP Clients like Claude & Cursor that need to access multiple MCP servers for tools.
+2. Devs building AI Agents that need to access MCP servers with built-in **security** and **Access Control**.
+3. Organisations wanting to track all their MCP servers from one centralized place. Hosted in their own datacenter 🔒
 
 ## Installation
 
