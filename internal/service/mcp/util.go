@@ -2,13 +2,17 @@ package mcp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/client/transport"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mcpjungle/mcpjungle/internal/model"
+	"net"
+	"net/url"
 	"regexp"
 	"strings"
+	"syscall"
 )
 
 const serverToolNameSep = "/"
@@ -44,6 +48,28 @@ func splitServerToolName(name string) (string, string, bool) {
 	return serverName, toolName, true
 }
 
+// isLoopbackURL returns true if rawURL resolves to a loopback address.
+// It assumes that rawURL is a valid URL.
+func isLoopbackURL(rawURL string) bool {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return false // invalid URL, cannot determine loopback
+	}
+	host := u.Hostname()
+
+	if host == "" {
+		return false // no host, not a loopback
+	}
+	if strings.EqualFold(host, "localhost") {
+		return true
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		return ip.IsLoopback()
+	}
+
+	return false
+}
+
 // createMcpServerConn creates a new MCP server connection and returns the client.
 func createMcpServerConn(ctx context.Context, s *model.McpServer) (*client.Client, error) {
 	var opts []transport.StreamableHTTPCOption
@@ -70,6 +96,13 @@ func createMcpServerConn(ctx context.Context, s *model.McpServer) (*client.Clien
 
 	_, err = c.Initialize(ctx, initRequest)
 	if err != nil {
+		if errors.Is(err, syscall.ECONNREFUSED) && isLoopbackURL(s.URL) {
+			return nil, fmt.Errorf(
+				"connection to the MCP server %s was refused. "+
+					"If mcpjungle is running inside Docker, use 'host.docker.internal' as your MCP server's hostname",
+				s.URL,
+			)
+		}
 		return nil, fmt.Errorf("failed to initialize connection with MCP server: %w", err)
 	}
 
