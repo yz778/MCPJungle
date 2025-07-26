@@ -66,3 +66,49 @@ func TestSplitServerToolName(t *testing.T) {
 		})
 	}
 }
+
+func TestIsLoopbackURL(t *testing.T) {
+	tests := []struct {
+		name   string
+		rawURL string
+		want   bool
+	}{
+		// IPv4 loopback
+		{"IPv4 127.0.0.1", "http://127.0.0.1:8080", true},
+		{"IPv4 127.0.0.1 no port", "http://127.0.0.1", true},
+		{"IPv4 127.0.0.2", "http://127.0.0.2", true}, // 127.0.0.0/8 is loopback
+		{"IPv4 127.255.255.255", "http://127.255.255.255", true},
+		{"IPv4 0.0.0.0", "http://0.0.0.0:9000", false}, // 0.0.0.0 is not loopback, it's "any"
+		// IPv6 loopback
+		{"IPv6 ::1", "http://[::1]:8080", true},
+		{"IPv6 ::1 no port", "http://[::1]", true},
+		// Hostname loopback
+		{"localhost", "http://localhost:8080", true},
+		{"localhost no port", "http://localhost", true},
+		{"LOCALHOST uppercase", "http://LOCALHOST", true},
+		// Non-loopback IPv4
+		{"IPv4 public", "http://8.8.8.8:8080", false},
+		{"IPv4 private", "http://192.168.1.1", false},
+		// Non-loopback IPv6
+		{"IPv6 public", "http://[2001:4860:4860::8888]:443", false},
+		// Hostname non-loopback
+		{"example.com", "http://example.com", false},
+		{"sub.domain.com", "http://sub.domain.com:1234", false},
+		// Malformed URLs
+		{"empty string", "", false},
+		{"no scheme", "127.0.0.1:8080", false},
+		{"garbage", "not a url", false},
+		// Edge cases
+		{"IPv4 with userinfo", "http://user:pass@127.0.0.1:8080", true},
+		{"IPv6 with userinfo", "http://user:pass@[::1]:8080", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := isLoopbackURL(tt.rawURL)
+			if got != tt.want {
+				t.Errorf("isLoopbackURL(%q) = %v, want %v", tt.rawURL, got, tt.want)
+			}
+		})
+	}
+}
