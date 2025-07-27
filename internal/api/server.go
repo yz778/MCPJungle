@@ -10,6 +10,7 @@ import (
 	"github.com/mcpjungle/mcpjungle/internal/service/mcp"
 	"github.com/mcpjungle/mcpjungle/internal/service/mcp_client"
 	"github.com/mcpjungle/mcpjungle/internal/service/user"
+	"github.com/mcpjungle/mcpjungle/internal/web"
 	"net/http"
 	"strings"
 )
@@ -258,16 +259,67 @@ func newRouter(opts *ServerOptions) (*gin.Engine, error) {
 	)
 
 	// Serve static web UI files
-	r.Static("/static", "./web/static")
-	r.StaticFile("/", "./web/index.html")
-	r.StaticFile("/dashboard", "./web/dashboard.html")
-	r.StaticFile("/servers", "./web/servers.html")
-	r.StaticFile("/tools", "./web/tools.html")
-	r.StaticFile("/config", "./web/config.html")
+	// Serve embedded static files
+	staticFS, err := web.GetStaticFS()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get static filesystem: %w", err)
+	}
+	r.StaticFS("/static", http.FS(staticFS))
+	
+	// Serve embedded HTML files
+	r.GET("/", func(c *gin.Context) {
+		data, err := web.EmbeddedFiles.ReadFile("index.html")
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+	
+	r.GET("/dashboard", func(c *gin.Context) {
+		data, err := web.EmbeddedFiles.ReadFile("dashboard.html")
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+	
+	r.GET("/servers", func(c *gin.Context) {
+		data, err := web.EmbeddedFiles.ReadFile("servers.html")
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+	
+	r.GET("/tools", func(c *gin.Context) {
+		data, err := web.EmbeddedFiles.ReadFile("tools.html")
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
+	
+	r.GET("/config", func(c *gin.Context) {
+		data, err := web.EmbeddedFiles.ReadFile("config.html")
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Data(http.StatusOK, "text/html; charset=utf-8", data)
+	})
 
 	// 404 handler for unmatched routes
 	r.NoRoute(func(c *gin.Context) {
-		c.File("./web/404.html")
+		data, err := web.EmbeddedFiles.ReadFile("404.html")
+		if err != nil {
+			c.Status(http.StatusNotFound)
+			return
+		}
+		c.Data(http.StatusNotFound, "text/html; charset=utf-8", data)
 	})
 
 	r.POST("/init", registerInitServerHandler(opts.ConfigService, opts.UserService))
