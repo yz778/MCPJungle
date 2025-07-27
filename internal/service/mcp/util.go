@@ -15,7 +15,7 @@ import (
 	"syscall"
 )
 
-const serverToolNameSep = "/"
+const serverToolNameSep = "__"
 
 // Only allow letters, numbers, hyphens, and underscores
 var validServerName = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)

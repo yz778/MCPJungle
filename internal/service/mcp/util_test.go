@@ -32,8 +32,8 @@ func TestMergeServerToolNames(t *testing.T) {
 		tool   string
 		want   string
 	}{
-		{"myserver", "mytool", "myserver/mytool"},
-		{"myserver", "my/tool", "myserver/my/tool"},
+		{"myserver", "mytool", "myserver__mytool"},
+		{"myserver", "my/tool", "myserver__my/tool"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.server+"_"+tt.tool, func(t *testing.T) {
@@ -52,8 +52,8 @@ func TestSplitServerToolName(t *testing.T) {
 		wantTool   string
 		wantOK     bool
 	}{
-		{"server/tool", "server", "tool", true},
-		{"a/b/c", "a", "b/c", true},
+		{"server__tool", "server", "tool", true},
+		{"a__b/c", "a", "b/c", true},
 		{"no_separator", "", "", false},
 	}
 	for _, tt := range tests {
